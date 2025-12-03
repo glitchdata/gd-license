@@ -4,7 +4,7 @@ A dependency-free PHP + MySQL license service tailored for SiteGround shared hos
 
 ## Highlights
 - MySQL schema for products, licenses, and per-instance activations.
-- Single entry point API (`public_html/index.php`) routed via `.htaccess`.
+- Single entry point API (`public_html/index.php`) routed via `.htaccess` plus an optional operator GUI in `public_html/admin/`.
 - Admin-protected license issuance endpoint plus CLI helper for maintenance windows.
 - Configurable CORS and timezone plus `.env`-friendly configuration.
 - Works on SiteGround Site Tools (PHP 8.1/8.2) without composer or system packages.
@@ -20,7 +20,7 @@ A dependency-free PHP + MySQL license service tailored for SiteGround shared hos
 3. Create a MySQL database and user in Site Tools → MySQL.
 4. Import `sql/schema.sql` via phpMyAdmin or `mysql` CLI to create tables and a sample product.
 5. Upload the project so that the repository's `public_html/` directory maps to your hosting `public_html/` (or configure SiteGround to use it directly as the document root). Everything else should sit outside the web root for safety.
-6. Hit `https://your-domain/api/licenses/validate` with a JSON payload to verify responses.
+6. Hit `https://your-domain/api/licenses/validate` with a JSON payload to verify responses or open `/admin/` in a protected browser session for GUI testing.
 
 ## Configuration
 `config/config.php` pulls from environment variables so you do not have to edit PHP files in production. Supported variables:
@@ -53,7 +53,7 @@ VALUES ('PLUGIN_X', 'Plugin X', 5, NOW(), NOW());
 
 ## Deploying on SiteGround
 1. Upload the repo (via Git deploy, SFTP, or SiteGround Git). Keep `config`, `src`, `scripts`, `sql`, and `docs` outside `public_html` when possible.
-2. Ensure the repo's `public_html/` directory is deployed as the document root (or symlinked there). The included `.htaccess` routes `/api/*` calls to `index.php`.
+2. Ensure the repo's `public_html/` directory is deployed as the document root (or symlinked there). The included `.htaccess` routes `/api/*` calls to `index.php`, while static assets like `/admin/` load directly.
 3. In Site Tools → Devs → PHP Manager select PHP 8.2 and enable OPcache.
 4. In PHP Variables, set the environment variables mentioned above.
 5. In Site Tools → MySQL import the schema and verify connectivity using the CLI helper (`php scripts/create_license.php --product=APP_PRO`).
@@ -136,6 +136,14 @@ It prints the license summary as JSON. The script reuses the same config/bootstr
 - Serve the API over HTTPS only.
 - Use SiteGround IP restrictions or Web Application Firewall rules to narrow down who can call `/api/licenses/issue`.
 - Consider moving the admin issuance flow to scheduled CLI scripts if you do not need remote issuance.
+
+## Admin GUI
+The `/admin/` directory hosts a lightweight operator console for issuing, validating, and simulating activations without touching curl.
+
+- The GUI is static HTML/CSS/JS; it talks directly to `/api/licenses/*` using the values you supply for base URL and bearer token.
+- The admin token is stored in `localStorage` only on the device where you load the page. Clear storage if the workstation is shared.
+- Restrict access: place the `/admin/` path behind HTTP auth, an allow-listed IP, or SiteGround password protection. Anyone with browser access and the token can mint licenses.
+- Forms cover issuance, validation, and activate/deactivate calls, and the console logs every request+response for quick debugging.
 
 ## Additional Notes
 - Detailed architectural decisions live in `docs/architecture.md`.

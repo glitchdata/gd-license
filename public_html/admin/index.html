@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Server Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="grad-background"></div>
+    <main class="shell">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">GD License Server</p>
+                <h1>Operator Console</h1>
+                <p class="lede">Issue keys, monitor activations, and run validation checks without touching curl. Bring your admin token and go.</p>
+            </div>
+            <div class="status-panel">
+                <label>Admin Token</label>
+                <input type="password" id="adminToken" placeholder="Bearer token" autocomplete="off">
+                <label>API Base URL</label>
+                <input type="url" id="baseUrl" value="/api/licenses" autocomplete="off">
+                <small>The GUI talks directly to your public API. Keep this page private.</small>
+            </div>
+        </header>
+
+        <section class="grid">
+            <article class="card" id="issueCard">
+                <div class="card-head">
+                    <h2>Issue License</h2>
+                    <p>Create a new license or regenerate a key for a product.</p>
+                </div>
+                <form id="issueForm" class="stack">
+                    <label>Product Code
+                        <input name="product_code" required>
+                    </label>
+                    <label>License Key (optional)
+                        <input name="license_key" placeholder="Auto-generate if empty">
+                    </label>
+                    <label>Expires At
+                        <input name="expires_at" placeholder="YYYY-MM-DD or +1 year">
+                    </label>
+                    <label>Max Activations
+                        <input name="max_activations" type="number" min="1" placeholder="Falls back to product default">
+                    </label>
+                    <label>Notes
+                        <textarea name="notes" rows="2" placeholder="Internal note"></textarea>
+                    </label>
+                    <button type="submit">Issue</button>
+                </form>
+            </article>
+
+            <article class="card" id="validateCard">
+                <div class="card-head">
+                    <h2>Validate License</h2>
+                    <p>Check the status of an existing key and see activation usage.</p>
+                </div>
+                <form id="validateForm" class="stack">
+                    <label>Product Code
+                        <input name="product_code" required>
+                    </label>
+                    <label>License Key
+                        <input name="license_key" required>
+                    </label>
+                    <label>Instance ID (optional)
+                        <input name="instance_id" placeholder="site-123">
+                    </label>
+                    <button type="submit">Validate</button>
+                </form>
+            </article>
+
+            <article class="card" id="activateCard">
+                <div class="card-head">
+                    <h2>Activate / Deactivate</h2>
+                    <p>Simulate client calls to test activation counting.</p>
+                </div>
+                <form id="activateForm" class="stack">
+                    <label>Product Code
+                        <input name="product_code" required>
+                    </label>
+                    <label>License Key
+                        <input name="license_key" required>
+                    </label>
+                    <label>Instance ID
+                        <input name="instance_id" required>
+                    </label>
+                    <label>Domain
+                        <input name="domain" placeholder="client.com">
+                    </label>
+                    <label>User Agent
+                        <input name="user_agent" placeholder="woocommerce/8.0">
+                    </label>
+                    <div class="actions">
+                        <button type="button" data-action="activate">Activate</button>
+                        <button type="button" data-action="deactivate" class="ghost">Deactivate</button>
+                    </div>
+                </form>
+            </article>
+        </section>
+
+        <section class="log-card">
+            <div class="card-head">
+                <h2>API Console</h2>
+                <p>Request/response history to keep tabs on what happened.</p>
+            </div>
+            <div id="log"></div>
+        </section>
+    </main>
+
+    <template id="logEntry">
+        <div class="entry">
+            <div class="entry-head">
+                <span class="pill"></span>
+                <strong class="label"></strong>
+                <span class="time"></span>
+            </div>
+            <div class="entry-body"></div>
+        </div>
+    </template>
+
+    <script src="app.js" defer></script>
+</body>
+</html>
