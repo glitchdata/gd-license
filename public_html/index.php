@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LicenseServer\LicenseService;
+use LicenseServer\UserService;
 use RuntimeException;
 use Throwable;
 
@@ -13,53 +14,48 @@ if (($segments[0] ?? '') !== 'api') {
     servePortal();
 }
 
-[$config, $database, $service] = require __DIR__ . '/../src/bootstrap.php';
+[$config, $database, $licenseService, $userService] = require __DIR__ . '/../src/bootstrap.php';
 
 $allowedOrigins = $config['security']['allowed_origins'] ?? '*';
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . $allowedOrigins);
-header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($method === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
 
-if (($segments[1] ?? '') !== 'licenses') {
-    respond(404, ['error' => 'Route not found.']);
-}
-
+$resource = $segments[1] ?? '';
 $action = $segments[2] ?? '';
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-
-$allowed = ['issue', 'activate', 'validate', 'deactivate'];
-if (!in_array($action, $allowed, true)) {
-    respond(404, ['error' => 'Unknown license route.']);
-}
-
-if ($method !== 'POST') {
-    respond(405, ['error' => 'Only POST is supported.']);
-}
-
-$body = file_get_contents('php://input');
-$payload = json_decode($body ?: '[]', true);
-if (!is_array($payload)) {
-    respond(400, ['error' => 'Invalid JSON body.']);
-}
 
 try {
-    $result = handleAction($service, $action, $payload, $config);
+    if ($resource === 'licenses') {
+        if ($method !== 'POST') {
+            respond(405, ['error' => 'Only POST is supported for licenses.']);
+        }
+        $payload = readJsonPayload();
+        $result = handleLicenseAction($licenseService, $action, $payload, $config);
+        $status = $action === 'issue' ? 201 : 200;
+        respond($status, ['success' => true, 'data' => $result]);
+    }
+
+    if ($resource === 'users') {
+        ensureSession();
+        $result = handleUserAction($userService, $action, $method);
+        respond(200, ['success' => true, 'data' => $result]);
+    }
+
+    respond(404, ['error' => 'Route not found.']);
 } catch (RuntimeException $exception) {
     respond(400, ['error' => $exception->getMessage()]);
 } catch (Throwable $exception) {
     respond(500, ['error' => 'Server error: ' . $exception->getMessage()]);
 }
 
-$status = $action === 'issue' ? 201 : 200;
-respond($status, ['success' => true, 'data' => $result]);
-
-function handleAction(LicenseService $service, string $action, array $payload, array $config): array
+function handleLicenseAction(LicenseService $service, string $action, array $payload, array $config): array
 {
     $ip = $_SERVER['REMOTE_ADDR'] ?? null;
 
@@ -72,6 +68,17 @@ function handleAction(LicenseService $service, string $action, array $payload, a
     };
 }
 
+function handleUserAction(UserService $service, string $action, string $method): array
+{
+    return match ($action) {
+        'login' => handleUserLogin($service, $method),
+        'logout' => handleUserLogout($method),
+        'me' => handleUserProfile($service),
+        'licenses' => handleUserLicenses($service),
+        default => throw new RuntimeException('Unknown user route.'),
+    };
+}
+
 function handleIssue(LicenseService $service, array $payload, array $config): array
 {
     $token = getBearerToken();
@@ -81,6 +88,72 @@ function handleIssue(LicenseService $service, array $payload, array $config): ar
     }
 
     return $service->issueLicense($payload);
+}
+
+function handleUserLogin(UserService $service, string $method): array
+{
+    if ($method !== 'POST') {
+        throw new RuntimeException('Unsupported method.');
+    }
+
+    $payload = readJsonPayload();
+    $email = trim((string) ($payload['email'] ?? ''));
+    $password = (string) ($payload['password'] ?? '');
+
+    if ($email === '' || $password === '') {
+        throw new RuntimeException('Email and password are required.');
+    }
+
+    $user = $service->authenticate($email, $password);
+
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $user['id'];
+
+    return [
+        'profile' => $service->profile($user['id']),
+        'licenses' => $service->licenses($user['id']),
+    ];
+}
+
+function handleUserLogout(string $method): array
+{
+    if ($method !== 'POST') {
+        throw new RuntimeException('Unsupported method.');
+    }
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+        }
+        session_destroy();
+    }
+
+    return ['logged_out' => true];
+}
+
+function handleUserProfile(UserService $service): array
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+        throw new RuntimeException('Unsupported method.');
+    }
+    $userId = requireAuthenticatedUser();
+    return [
+        'profile' => $service->profile($userId),
+        'licenses' => $service->licenses($userId),
+    ];
+}
+
+function handleUserLicenses(UserService $service): array
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+        throw new RuntimeException('Unsupported method.');
+    }
+    $userId = requireAuthenticatedUser();
+    return [
+        'licenses' => $service->licenses($userId),
+    ];
 }
 
 function getBearerToken(): ?string
@@ -111,6 +184,35 @@ function servePortal(): void
     header('Content-Type: text/html; charset=utf-8');
     readfile($portal);
     exit;
+}
+
+function ensureSession(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start([
+            'cookie_httponly' => true,
+            'cookie_samesite' => 'Strict',
+        ]);
+    }
+}
+
+function requireAuthenticatedUser(): int
+{
+    if (!isset($_SESSION['user_id'])) {
+        respond(401, ['error' => 'Authentication required.']);
+    }
+
+    return (int) $_SESSION['user_id'];
+}
+
+function readJsonPayload(): array
+{
+    $body = file_get_contents('php://input');
+    $payload = json_decode($body ?: '[]', true);
+    if (!is_array($payload)) {
+        throw new RuntimeException('Invalid JSON body.');
+    }
+    return $payload;
 }
 
 function respond(int $status, array $payload): void

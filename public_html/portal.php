@@ -21,6 +21,7 @@
                 <li>All traffic targets <code>/api/licenses/*</code> over HTTPS.</li>
                 <li>Issuing licenses requires the bearer token defined in `LICENSE_ADMIN_TOKEN`.</li>
                 <li>Keep this console behind HTTP auth or an allow-listed VPN.</li>
+                <li>Customers sign in at <a href="/user/">/user/</a> with their email + password.</li>
             </ul>
         </div>
         <div class="panel" id="authPanel">

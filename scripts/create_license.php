@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Throwable;
 
-[$config, $database, $service] = require __DIR__ . '/../src/bootstrap.php';
+[$config, $database, $licenseService, $userService] = require __DIR__ . '/../src/bootstrap.php';
 
 $options = getopt('', [
     'product:',
@@ -45,7 +45,7 @@ if (!empty($options['status'])) {
 }
 
 try {
-    $license = $service->issueLicense($data);
+    $license = $licenseService->issueLicense($data);
     fwrite(STDOUT, 'License issued: ' . $license['license_key'] . PHP_EOL);
     fwrite(STDOUT, json_encode($license, JSON_PRETTY_PRINT) . PHP_EOL);
     exit(0);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use LicenseServer\Database;
 use LicenseServer\LicenseService;
+use LicenseServer\UserService;
 
 if (!defined('LICENSE_SERVER_AUTOLOADED')) {
     define('LICENSE_SERVER_AUTOLOADED', true);
@@ -32,6 +33,7 @@ $config = require $configPath;
 date_default_timezone_set($config['timezone'] ?? 'UTC');
 
 $database = new Database($config['db']);
-$service = new LicenseService($database->pdo(), $config);
+$licenseService = new LicenseService($database->pdo(), $config);
+$userService = new UserService($database->pdo());
 
-return [$config, $database, $service];
+return [$config, $database, $licenseService, $userService];

@@ -4,7 +4,8 @@ A dependency-free PHP + MySQL license service tailored for SiteGround shared hos
 
 ## Highlights
 - MySQL schema for products, licenses, and per-instance activations.
-- Single entry point API (`public_html/index.php`) routed via `.htaccess`, now paired with a landing portal (`/`) and the deeper operator GUI under `public_html/admin/`.
+- Single entry point API (`public_html/index.php`) routed via `.htaccess`, now paired with a landing portal (`/`), the operator GUI under `public_html/admin/`, and an authenticated end-user portal at `/user/`.
+- Credential-backed login for customers so they can review their profile and assigned licenses.
 - Admin-protected license issuance endpoint plus CLI helper for maintenance windows.
 - Configurable CORS and timezone plus `.env`-friendly configuration.
 - Works on SiteGround Site Tools (PHP 8.1/8.2) without composer or system packages.
@@ -20,7 +21,7 @@ A dependency-free PHP + MySQL license service tailored for SiteGround shared hos
 3. Create a MySQL database and user in Site Tools → MySQL.
 4. Import `sql/schema.sql` via phpMyAdmin or `mysql` CLI to create tables and a sample product.
 5. Upload the project so that the repository's `public_html/` directory maps to your hosting `public_html/` (or configure SiteGround to use it directly as the document root). Everything else should sit outside the web root for safety.
-6. Visit `https://your-domain/` to access the built-in portal for login, license management, and API docs, or hit `/api/licenses/validate` directly with JSON to verify responses.
+6. Visit `https://your-domain/` to access the built-in operator portal (and link to the customer portal at `/user/`), or hit `/api/licenses/validate` directly with JSON to verify responses.
 
 ## Configuration
 `config/config.php` pulls from environment variables so you do not have to edit PHP files in production. Supported variables:
@@ -44,12 +45,26 @@ Run the schema SQL after creating the database:
 mysql -h your-host -u your-user -p your_db < sql/schema.sql
 ```
 
-The script seeds an example product (`APP_PRO`). Add more via:
+The script seeds:
+
+- Example product (`APP_PRO`).
+- Demo user `demo@glitchdata.com` with password `Passw0rd!` (bcrypt hash) and a linked license for smoke tests.
+
+Add more products via:
 
 ```sql
 INSERT INTO products (code, name, max_activations, created_at, updated_at)
 VALUES ('PLUGIN_X', 'Plugin X', 5, NOW(), NOW());
 ```
+
+### User + License Tables
+
+Two additional tables power credentialed access:
+
+- `users`: stores email, full name, bcrypt `password_hash`, timestamps, and `last_login_at`.
+- `user_licenses`: associates users with `licenses` (many-to-many) with `assigned_at` metadata.
+
+Assigning a license is as simple as inserting a row into `user_licenses` with the relevant IDs.
 
 ## Deploying on SiteGround
 1. Upload the repo (via Git deploy, SFTP, or SiteGround Git). Keep `config`, `src`, `scripts`, `sql`, and `docs` outside `public_html` when possible.
@@ -67,6 +82,15 @@ All endpoints accept and return JSON. POST only. Base path: `/api/licenses/*`.
 | `POST /api/licenses/activate` | none | `license_key`, `product_code`, `instance_id`, `domain`, `user_agent` | Reserves/refreshes an activation slot. |
 | `POST /api/licenses/validate` | none | `license_key`, `product_code`, `instance_id?` | Checks status/expiry and updates heartbeat for the instance if supplied. |
 | `POST /api/licenses/deactivate` | none | `license_key`, `product_code`, `instance_id` | Releases an activation slot. |
+
+### User API (`/api/users/*`)
+
+| Endpoint | Method | Auth | Description |
+| --- | --- | --- | --- |
+| `/api/users/login` | POST | Email + password body | Starts a PHP session (cookie) and returns `{ profile, licenses }`. |
+| `/api/users/me` | GET | Session cookie | Returns the authenticated user's profile plus their assigned licenses. |
+| `/api/users/licenses` | GET | Session cookie | License list only (handy for polling).
+| `/api/users/logout` | POST | Session cookie | Destroys the session.
 
 ### Example Requests
 Activate a license:
@@ -154,6 +178,16 @@ The `/admin/` directory hosts a lightweight operator console for issuing, valida
 - The admin token is stored in `localStorage` only on the device where you load the page. Clear storage if the workstation is shared.
 - Restrict access: place the `/admin/` path behind HTTP auth, an allow-listed IP, or SiteGround password protection. Anyone with browser access and the token can mint licenses.
 - Forms cover issuance, validation, and activate/deactivate calls, and the console logs every request+response for quick debugging.
+
+## User Portal (`/user/`)
+
+End customers sign in with the credentials stored in the new `users` table (bcrypt hashed). Once authenticated they can:
+
+- View their profile metadata (full name, email, member since, last login).
+- Browse every license assigned to them, with activation usage and expiry dates.
+- Refresh data or sign out; all calls use the `/api/users/*` endpoints with a SameSite=Strict session cookie.
+
+Seed users via `INSERT INTO users (...) VALUES (...)` with `password_hash = password_hash('PlainText', PASSWORD_DEFAULT)` and assign licenses by populating `user_licenses`.
 
 ## Additional Notes
 - Detailed architectural decisions live in `docs/architecture.md`.

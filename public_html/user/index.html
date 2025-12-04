@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>License Locker · User Access</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="backdrop"></div>
+<main class="layout">
+    <section class="panel login" id="loginPanel">
+        <h1>Welcome back</h1>
+        <p class="muted">Sign in with the email and password provided by Glitchdata to view your licenses.</p>
+        <form id="loginForm" class="stack">
+            <label>Email
+                <input type="email" name="email" required autocomplete="email">
+            </label>
+            <label>Password
+                <input type="password" name="password" required autocomplete="current-password">
+            </label>
+            <button type="submit">Sign In</button>
+            <p class="muted small">Problems logging in? Contact support@glitchdata.com.</p>
+        </form>
+    </section>
+
+    <section class="panel dashboard hidden" id="dashboard">
+        <header class="dash-head">
+            <div>
+                <p class="eyebrow">Active session</p>
+                <h2 id="userName">—</h2>
+                <p class="muted" id="userEmail"></p>
+            </div>
+            <div class="dash-actions">
+                <button type="button" id="refreshBtn" class="ghost">Refresh</button>
+                <button type="button" id="logoutBtn">Logout</button>
+            </div>
+        </header>
+        <dl class="meta">
+            <div>
+                <dt>Member since</dt>
+                <dd id="userCreated">—</dd>
+            </div>
+            <div>
+                <dt>Last login</dt>
+                <dd id="userLastLogin">—</dd>
+            </div>
+        </dl>
+
+        <div class="table-card">
+            <div class="table-head">
+                <h3>Your licenses</h3>
+                <p class="muted">Each license tracks its own activation allowance.</p>
+            </div>
+            <div class="table-scroll" id="licenseTable"></div>
+        </div>
+    </section>
+</main>
+
+<template id="licenseRow">
+    <article class="license">
+        <header>
+            <div>
+                <p class="product"></p>
+                <h4 class="key"></h4>
+            </div>
+            <span class="status"></span>
+        </header>
+        <dl>
+            <div>
+                <dt>Assigned</dt>
+                <dd class="assigned">—</dd>
+            </div>
+            <div>
+                <dt>Expires</dt>
+                <dd class="expires">—</dd>
+            </div>
+            <div>
+                <dt>Activations</dt>
+                <dd class="activations">—</dd>
+            </div>
+        </dl>
+    </article>
+</template>
+
+<script src="./app.js" defer></script>
+</body>
+</html>
