@@ -159,6 +159,141 @@ class LicenseService
         ];
     }
 
+    public function listLicenses(array $filters = []): array
+    {
+        $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
+        $offset = max(0, (int) ($filters['offset'] ?? 0));
+        $search = trim((string) ($filters['search'] ?? ''));
+        $status = trim((string) ($filters['status'] ?? ''));
+
+        $conditions = [];
+        $params = [];
+
+        if ($search !== '') {
+            $conditions[] = '(l.license_key LIKE :search OR p.code LIKE :search OR p.name LIKE :search)';
+            $params['search'] = '%' . $search . '%';
+        }
+
+        if ($status !== '') {
+            $conditions[] = 'l.status = :status';
+            $params['status'] = $this->normalizeStatus($status);
+        }
+
+        $sql = 'SELECT l.*, p.code AS product_code, p.name AS product_name, p.max_activations AS product_max_activations,
+                       COUNT(a.id) AS activations_in_use
+                FROM licenses l
+                JOIN products p ON p.id = l.product_id
+                LEFT JOIN license_activations a ON a.license_id = l.id';
+
+        if ($conditions) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' GROUP BY l.id
+                  ORDER BY l.created_at DESC
+                  LIMIT :limit OFFSET :offset';
+
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value);
+        }
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll() ?: [];
+        $licenses = array_map(function (array $row): array {
+            $limit = $this->determineActivationLimit($row);
+            $count = (int) ($row['activations_in_use'] ?? 0);
+            return $this->formatLicense($row, $limit, $count);
+        }, $rows);
+
+        return [
+            'licenses' => $licenses,
+            'count' => count($licenses),
+        ];
+    }
+
+    public function updateLicense(array $data): array
+    {
+        $licenseKey = $this->requireString($data, 'license_key');
+        $license = $this->findLicense($licenseKey);
+        if (!$license) {
+            throw new RuntimeException('License not found.');
+        }
+
+        $fields = [];
+
+        if (array_key_exists('status', $data)) {
+            $fields['status'] = $this->normalizeStatus((string) $data['status']);
+        }
+
+        if (array_key_exists('max_activations', $data)) {
+            $value = trim((string) $data['max_activations']);
+            $fields['max_activations'] = $value === '' ? null : max(1, (int) $value);
+        }
+
+        if (array_key_exists('expires_at', $data)) {
+            $value = trim((string) $data['expires_at']);
+            if ($value === '') {
+                $fields['expires_at'] = null;
+            } else {
+                $expires = new DateTimeImmutable($value, $this->timezone);
+                $fields['expires_at'] = $expires->format('Y-m-d H:i:s');
+            }
+        }
+
+        if (array_key_exists('notes', $data)) {
+            $note = trim((string) $data['notes']);
+            $fields['notes'] = $note === '' ? null : $note;
+        }
+
+        if (!$fields) {
+            $limit = $this->determineActivationLimit($license);
+            $count = $this->countActivations($license['id']);
+            return ['license' => $this->formatLicense($license, $limit, $count)];
+        }
+
+        $fields['updated_at'] = $this->now();
+
+        $assignments = [];
+        foreach ($fields as $column => $value) {
+            $assignments[] = sprintf('%s = :%s', $column, $column);
+        }
+
+        $sql = sprintf('UPDATE licenses SET %s WHERE license_key = :license_key', implode(', ', $assignments));
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($fields as $column => $value) {
+            $stmt->bindValue(':' . $column, $value);
+        }
+        $stmt->bindValue(':license_key', $licenseKey);
+        $stmt->execute();
+
+        $updated = $this->findLicense($licenseKey);
+        if (!$updated) {
+            throw new RuntimeException('Updated license could not be retrieved.');
+        }
+
+        $limit = $this->determineActivationLimit($updated);
+        $count = $this->countActivations($updated['id']);
+
+        return ['license' => $this->formatLicense($updated, $limit, $count)];
+    }
+
+    public function deleteLicense(array $data): array
+    {
+        $licenseKey = $this->requireString($data, 'license_key');
+        $license = $this->findLicense($licenseKey);
+        if (!$license) {
+            throw new RuntimeException('License not found.');
+        }
+
+        $stmt = $this->pdo->prepare('DELETE FROM licenses WHERE id = :id');
+        $stmt->execute(['id' => $license['id']]);
+
+        return ['deleted' => $stmt->rowCount() > 0];
+    }
+
     private function lookupLicense(array $data): array
     {
         $licenseKey = $this->requireString($data, 'license_key');
@@ -279,6 +414,7 @@ class LicenseService
     private function formatLicense(array $license, int $limit, int $count): array
     {
         return [
+            'id' => (int) $license['id'],
             'license_key' => $license['license_key'],
             'product' => [
                 'code' => $license['product_code'],
@@ -289,6 +425,9 @@ class LicenseService
             'max_activations' => $limit,
             'activations_in_use' => $count,
             'activations_remaining' => max(0, $limit - $count),
+            'notes' => $license['notes'] ?? null,
+            'created_at' => $license['created_at'] ?? null,
+            'updated_at' => $license['updated_at'] ?? null,
         ];
     }
 }

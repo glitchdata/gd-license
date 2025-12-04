@@ -1,15 +1,25 @@
+curl -X POST "${base}/issue" \
 const baseInput = document.querySelector('#baseUrl');
 const defaultProductInput = document.querySelector('#defaultProduct');
-const issueForm = document.querySelector('#issueForm');
-const validateForm = document.querySelector('#validateForm');
-const activateForm = document.querySelector('#activateForm');
 const loginForm = document.querySelector('#adminLoginForm');
 const sessionStateEl = document.querySelector('#sessionState');
 const sessionActionsEl = document.querySelector('#sessionActions');
 const sessionLogout = document.querySelector('#sessionLogout');
 const sessionRefresh = document.querySelector('#sessionRefresh');
+const dashboard = document.querySelector('#licenseDashboard');
+const issueForm = document.querySelector('#issueForm');
 const logContainer = document.querySelector('#log');
 const template = document.querySelector('#logEntry');
+const licenseTableBody = document.querySelector('#licenseTableBody');
+const licenseEmptyState = document.querySelector('#licenseEmpty');
+const licenseSearchInput = document.querySelector('#licenseSearch');
+const licenseStatusFilter = document.querySelector('#licenseStatus');
+const licenseRefreshButton = document.querySelector('#licenseRefreshButton');
+const licenseDetailForm = document.querySelector('#licenseDetailForm');
+const licenseDetailEmpty = document.querySelector('#licenseDetailEmpty');
+const deleteLicenseButton = document.querySelector('#deleteLicenseButton');
+const detailProductEl = document.querySelector('#detailProduct');
+const detailUsageEl = document.querySelector('#detailUsage');
 
 const STORAGE_KEY = 'gd-license-portal';
 const state = {
@@ -18,6 +28,9 @@ const state = {
 };
 
 let sessionProfile = null;
+let licenses = [];
+let selectedLicenseKey = null;
+let searchTimer = null;
 
 try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -42,19 +55,19 @@ baseInput?.addEventListener('input', () => {
     persist();
 });
 
+deleteLicenseButton?.setAttribute('disabled', 'true');
+
 function persist() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function applyDefaultProduct() {
     const value = state.defaultProduct;
-    [issueForm, validateForm, activateForm].forEach((form) => {
-        if (!form) return;
-        const field = form.querySelector('input[name="product_code"]');
-        if (field && !field.value) {
-            field.value = value;
-        }
-    });
+    if (!issueForm) return;
+    const field = issueForm.querySelector('input[name="product_code"]');
+    if (field && !field.value) {
+        field.value = value;
+    }
 }
 
 applyDefaultProduct();
@@ -82,6 +95,9 @@ sessionLogout?.addEventListener('click', async () => {
         console.warn(error);
     }
     sessionProfile = null;
+    selectedLicenseKey = null;
+    licenses = [];
+    renderLicenseTable();
     updateSessionUI();
     toast('Signed out.');
 });
@@ -94,21 +110,52 @@ sessionRefresh?.addEventListener('click', async () => {
 issueForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const payload = withDefaults(formToJSON(issueForm));
-    await callApi('issue', payload, true);
+    const result = await callApi('issue', payload, true);
+    if (result?.license) {
+        toast('License issued.');
+        issueForm.reset();
+        applyDefaultProduct();
+        await loadLicenses();
+        selectLicense(result.license.license_key);
+    }
 });
 
-validateForm?.addEventListener('submit', async (event) => {
+licenseDetailForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const payload = withDefaults(formToJSON(validateForm));
-    await callApi('validate', payload);
+    if (!selectedLicenseKey) return;
+    const payload = formToJSON(licenseDetailForm, { includeEmpty: true });
+    payload.license_key = selectedLicenseKey;
+    const result = await callApi('update', payload, true);
+    if (result?.license) {
+        toast('License updated.');
+        await loadLicenses();
+        selectLicense(result.license.license_key);
+    }
 });
 
-activateForm?.querySelectorAll('button[data-action]')?.forEach((button) => {
-    button.addEventListener('click', async () => {
-        const action = button.dataset.action;
-        const payload = withDefaults(formToJSON(activateForm));
-        await callApi(action, payload, true);
-    });
+deleteLicenseButton?.addEventListener('click', async () => {
+    if (!selectedLicenseKey) return;
+    if (!window.confirm('Delete this license? This action cannot be undone.')) return;
+    const result = await callApi('delete', { license_key: selectedLicenseKey }, true);
+    if (result?.deleted) {
+        toast('License deleted.');
+        selectedLicenseKey = null;
+        await loadLicenses();
+        clearDetailForm();
+    }
+});
+
+licenseSearchInput?.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadLicenses(), 300);
+});
+
+licenseStatusFilter?.addEventListener('change', () => {
+    loadLicenses();
+});
+
+licenseRefreshButton?.addEventListener('click', () => {
+    loadLicenses();
 });
 
 function withDefaults(payload) {
@@ -116,6 +163,117 @@ function withDefaults(payload) {
         payload.product_code = state.defaultProduct;
     }
     return payload;
+}
+
+async function loadLicenses() {
+    if (!sessionProfile?.is_admin) return;
+    try {
+        const params = new URLSearchParams();
+        const search = licenseSearchInput?.value.trim();
+        const status = licenseStatusFilter?.value.trim();
+        if (search) params.set('search', search);
+        if (status) params.set('status', status);
+        const query = params.toString();
+        const response = await fetch(`/api/licenses${query ? `?${query}` : ''}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+        const body = await response.json();
+        if (!response.ok || body.error) {
+            throw new Error(body.error || 'Failed to load licenses.');
+        }
+        licenses = body.data?.licenses ?? [];
+        renderLicenseTable();
+        if (selectedLicenseKey) {
+            const found = licenses.find((item) => item.license_key === selectedLicenseKey);
+            if (found) {
+                populateDetailForm(found);
+            } else {
+                clearDetailForm();
+            }
+        }
+    } catch (error) {
+        toast(error.message, 'error');
+    }
+}
+
+function renderLicenseTable() {
+    if (!licenseTableBody) return;
+    licenseTableBody.innerHTML = '';
+    if (!licenses.length) {
+        licenseEmptyState?.classList.remove('hidden');
+        return;
+    }
+    licenseEmptyState?.classList.add('hidden');
+    licenses.forEach((license) => {
+        const row = document.createElement('tr');
+        if (license.license_key === selectedLicenseKey) {
+            row.classList.add('active');
+        }
+        row.innerHTML = `
+            <td>
+                <strong>${license.license_key}</strong>
+                <div class="muted">${license.product?.name ?? 'Unlinked product'}</div>
+            </td>
+            <td>${license.product?.code ?? '—'}</td>
+            <td><span class="status-badge ${license.status}">${license.status}</span></td>
+            <td>${license.expires_at ?? '—'}</td>
+            <td>${license.activations_in_use}/${license.max_activations}</td>
+        `;
+        row.addEventListener('click', () => selectLicense(license.license_key));
+        licenseTableBody.appendChild(row);
+    });
+}
+
+function selectLicense(licenseKey) {
+    const license = licenses.find((item) => item.license_key === licenseKey);
+    if (!license) {
+        clearDetailForm();
+        return;
+    }
+    selectedLicenseKey = licenseKey;
+    populateDetailForm(license);
+    renderLicenseTable();
+}
+
+function populateDetailForm(license) {
+    if (!licenseDetailForm) return;
+    licenseDetailForm.classList.remove('hidden');
+    licenseDetailEmpty?.classList.add('hidden');
+    deleteLicenseButton?.removeAttribute('disabled');
+
+    setDetailField('license_key', license.license_key);
+    setDetailField('status', license.status);
+    setDetailField('expires_at', license.expires_at ?? '');
+    setDetailField('max_activations', license.max_activations ?? '');
+    setDetailField('notes', license.notes ?? '');
+
+    if (detailProductEl) {
+        const name = license.product?.name ?? 'Unknown product';
+        const code = license.product?.code ? ` · ${license.product.code}` : '';
+        detailProductEl.textContent = `${name}${code}`;
+    }
+    if (detailUsageEl) {
+        detailUsageEl.textContent = `${license.activations_in_use} / ${license.max_activations} activations`;
+    }
+}
+
+function setDetailField(name, value) {
+    if (!licenseDetailForm) return;
+    const field = licenseDetailForm.elements.namedItem(name);
+    if (field) {
+        field.value = value ?? '';
+    }
+}
+
+function clearDetailForm() {
+    selectedLicenseKey = null;
+    licenseDetailForm?.classList.add('hidden');
+    licenseDetailForm?.reset();
+    licenseDetailEmpty?.classList.remove('hidden');
+    deleteLicenseButton?.setAttribute('disabled', 'true');
+    if (detailProductEl) detailProductEl.textContent = '—';
+    if (detailUsageEl) detailUsageEl.textContent = '0 / 0 activations';
 }
 
 async function ensureAdminSession() {
@@ -138,6 +296,7 @@ async function refreshSession() {
         }
         sessionProfile = data.profile;
         updateSessionUI();
+        await loadLicenses();
         return sessionProfile;
     } catch (error) {
         sessionProfile = null;
@@ -151,10 +310,19 @@ function updateSessionUI(message) {
         sessionStateEl.textContent = `Signed in as ${sessionProfile.full_name}`;
         sessionActionsEl.classList.remove('hidden');
         loginForm?.classList.add('hidden');
+        if (sessionProfile.is_admin) {
+            dashboard?.classList.remove('hidden');
+        } else {
+            dashboard?.classList.add('hidden');
+        }
     } else {
         sessionStateEl.textContent = message || 'Not signed in';
         sessionActionsEl.classList.add('hidden');
         loginForm?.classList.remove('hidden');
+        dashboard?.classList.add('hidden');
+        licenses = [];
+        clearDetailForm();
+        renderLicenseTable();
     }
 }
 
@@ -166,11 +334,9 @@ async function callApi(action, payload, needsAdmin = false) {
     if (needsAdmin) {
         const ok = await ensureAdminSession();
         if (!ok) {
-            entry.classList.add('error');
-            entry.querySelector('.entry-body').textContent = 'Admin login required.';
-            entry.querySelector('.pill').style.background = 'var(--danger)';
+            markLogError(entry, 'Admin login required.');
             toast('Admin login required.', 'error');
-            return;
+            return null;
         }
     }
 
@@ -187,29 +353,53 @@ async function callApi(action, payload, needsAdmin = false) {
             throw new Error(body.error || 'API error');
         }
 
-        entry.classList.remove('error');
-        entry.querySelector('.label').textContent = `${action.toUpperCase()} · ${response.status}`;
-        entry.querySelector('.entry-body').textContent = JSON.stringify(body, null, 2);
-        entry.querySelector('.pill').style.background = 'var(--accent)';
-        return body;
+        if (entry) {
+            entry.classList.remove('error');
+            entry.querySelector('.label').textContent = `${action.toUpperCase()} · ${response.status}`;
+            entry.querySelector('.entry-body').textContent = JSON.stringify(body, null, 2);
+            entry.querySelector('.pill').style.background = 'var(--accent)';
+        }
+        return body.data;
     } catch (error) {
-        entry.classList.add('error');
-        entry.querySelector('.label').textContent = `${action.toUpperCase()} · ERROR`;
-        entry.querySelector('.entry-body').textContent = error.message;
-        entry.querySelector('.pill').style.background = 'var(--danger)';
+        markLogError(entry, error.message);
         toast(error.message, 'error');
+        return null;
     }
 }
 
-function formToJSON(form) {
+function markLogError(entry, message) {
+    if (!entry) return;
+    entry.classList.add('error');
+    const label = entry.querySelector('.label');
+    if (label) {
+        const base = label.textContent.split(' · ')[0];
+        label.textContent = `${base} · ERROR`;
+    }
+    const body = entry.querySelector('.entry-body');
+    if (body) {
+        body.textContent = message;
+    }
+    const pill = entry.querySelector('.pill');
+    if (pill) {
+        pill.style.background = 'var(--danger)';
+    }
+}
+
+function formToJSON(form, options = {}) {
+    const includeEmpty = options.includeEmpty ?? false;
     return Array.from(new FormData(form).entries()).reduce((acc, [key, value]) => {
-        if (value === '') return acc;
+        if (!includeEmpty && value === '') {
+            return acc;
+        }
         acc[key] = value;
         return acc;
     }, {});
 }
 
 function createLogEntry(action, payload) {
+    if (!template || !logContainer) {
+        return null;
+    }
     const node = template.content.firstElementChild.cloneNode(true);
     node.querySelector('.label').textContent = `${action.toUpperCase()} · …`;
     node.querySelector('.entry-body').textContent = JSON.stringify(payload, null, 2);
@@ -254,38 +444,5 @@ async function userApi(path, options = {}) {
     }
     return payload.data;
 }
-
-const SAMPLE_MAP = {
-    issue: (base) => `# Login first and store cookies:
-# curl -c cookie.txt -X POST https://example.com/api/users/login \
-#   -H "Content-Type: application/json" -d '{"email":"","password":""}'
-curl -X POST "${base}/issue" \
-  -H "Content-Type: application/json" \
-  -b cookie.txt \
-  -d '{"product_code":"APP_PRO"}'`,
-    activate: (base) => `curl -X POST "${base}/activate" \
-  -H "Content-Type: application/json" \
-  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
-    validate: (base) => `curl -X POST "${base}/validate" \
-  -H "Content-Type: application/json" \
-  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO"}'`,
-    deactivate: (base) => `curl -X POST "${base}/deactivate" \
-  -H "Content-Type: application/json" \
-  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
-};
-
-document.querySelectorAll('.doc-card button.copy').forEach((button) => {
-    button.addEventListener('click', () => {
-        const parent = button.closest('.doc-card');
-        const key = parent?.dataset.sample;
-        const base = (state.baseUrl || '/api/licenses').replace(/\/$/, '');
-        const builder = SAMPLE_MAP[key];
-        const text = builder ? builder(base) : parent.querySelector('pre')?.innerText;
-        if (!text) return;
-        navigator.clipboard.writeText(text)
-            .then(() => toast('Sample copied.'))
-            .catch(() => toast('Copy failed', 'error'));
-    });
-});
 
 refreshSession().catch(() => updateSessionUI());

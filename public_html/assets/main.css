@@ -45,6 +45,10 @@ body {
     padding: 3rem clamp(1.5rem, 4vw, 3.5rem) 4rem;
 }
 
+.muted {
+    color: var(--muted);
+}
+
 .masthead {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -202,6 +206,10 @@ small {
     gap: 0.9rem;
 }
 
+.card.compact {
+    padding: 1.4rem;
+}
+
 .button-row {
     display: flex;
     gap: 1rem;
@@ -232,6 +240,115 @@ button.ghost {
     color: var(--text);
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: none;
+}
+
+button.ghost.danger {
+    border-color: rgba(255, 111, 145, 0.6);
+    color: var(--danger);
+}
+
+.dashboard {
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    padding: 2rem;
+    background: rgba(4, 5, 11, 0.92);
+    box-shadow: var(--shadow);
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.filters input,
+.filters select {
+    min-width: 180px;
+}
+
+.dashboard-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+    gap: 1.8rem;
+}
+
+.list-panel {
+    min-width: 0;
+}
+
+.table-wrapper {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.license-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.license-table th,
+.license-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: left;
+}
+
+.license-table tbody tr {
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.license-table tbody tr:hover,
+.license-table tbody tr.active {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-badge.active { background: rgba(111, 255, 165, 0.15); color: #6effa5; }
+.status-badge.suspended { background: rgba(255, 179, 71, 0.18); color: #ffb347; }
+.status-badge.revoked { background: rgba(255, 111, 145, 0.18); color: #ff6f91; }
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+}
+
+.detail-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.detail-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 
 .log {
@@ -348,6 +465,12 @@ code {
 
 .toast.error {
     border-color: rgba(255, 111, 145, 0.6);
+}
+
+@media (max-width: 900px) {
+    .dashboard-body {
+        grid-template-columns: 1fr;
+    }
 }
 
 @keyframes fadeIn {

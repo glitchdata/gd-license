@@ -79,82 +79,110 @@ if (($segments[0] ?? '') !== 'api') {
         </div>
     </header>
 
-    <section class="grid" id="forms">
-        <article class="card">
-            <div class="card-head">
-                <h3>Issue License</h3>
-                <p>Generate a brand-new key or reuse an existing value.</p>
+curl -X POST "$BASE/issue" \
+    <section class="dashboard hidden" id="licenseDashboard">
+        <div class="dashboard-head">
+            <div>
+                <h3>Licenses</h3>
+                <p>Search, filter, and edit your fleet of keys the moment you log in.</p>
             </div>
-            <form id="issueForm" class="stack">
-                <label>Product Code
-                    <input name="product_code" required>
-                </label>
-                <label>License Key (optional)
-                    <input name="license_key" placeholder="Auto-generate when blank">
-                </label>
-                <label>Expires At
-                    <input name="expires_at" placeholder="2025-12-31 or +1 year">
-                </label>
-                <label>Max Activations
-                    <input name="max_activations" type="number" min="1" placeholder="Default to product allowance">
-                </label>
-                <label>Notes
-                    <textarea name="notes" rows="2" placeholder="Internal note"></textarea>
-                </label>
-                <div class="button-row">
-                    <button type="submit">Issue License</button>
+            <div class="filters">
+                <input type="search" id="licenseSearch" placeholder="Search by license, product, or customer">
+                <select id="licenseStatus">
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="revoked">Revoked</option>
+                </select>
+                <button type="button" class="ghost" id="licenseRefreshButton">Refresh</button>
+            </div>
+        </div>
+        <div class="dashboard-body">
+            <div class="list-panel">
+                <div class="table-wrapper">
+                    <table class="license-table">
+                        <thead>
+                            <tr>
+                                <th>License</th>
+                                <th>Product</th>
+                                <th>Status</th>
+                                <th>Expires</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licenseTableBody"></tbody>
+                    </table>
+                    <div class="empty-state hidden" id="licenseEmpty">
+                        <p>No licenses match your filters yet.</p>
+                    </div>
                 </div>
-            </form>
-        </article>
+            </div>
+            <div class="detail-panel">
+                <article class="card compact">
+                    <div class="card-head">
+                        <h3>Issue License</h3>
+                        <p>Generate a brand-new key or reuse an existing value.</p>
+                    </div>
+                    <form id="issueForm" class="stack">
+                        <label>Product Code
+                            <input name="product_code" required>
+                        </label>
+                        <label>License Key (optional)
+                            <input name="license_key" placeholder="Auto-generate when blank">
+                        </label>
+                        <label>Expires At
+                            <input name="expires_at" placeholder="2025-12-31 or +1 year">
+                        </label>
+                        <label>Max Activations
+                            <input name="max_activations" type="number" min="1" placeholder="Default to product allowance">
+                        </label>
+                        <label>Notes
+                            <textarea name="notes" rows="2" placeholder="Internal note"></textarea>
+                        </label>
+                        <div class="button-row">
+                            <button type="submit">Issue License</button>
+                        </div>
+                    </form>
+                </article>
 
-        <article class="card">
-            <div class="card-head">
-                <h3>Validate</h3>
-                <p>Check the health of any key, optionally tied to an instance.</p>
+                <article class="card compact">
+                    <div class="card-head">
+                        <h3>License Details</h3>
+                        <p>Pick a license from the table to edit status, limits, or notes.</p>
+                    </div>
+                    <div id="licenseDetailEmpty" class="muted">Select a license to view its details.</div>
+                    <form id="licenseDetailForm" class="stack hidden">
+                        <label>License Key
+                            <input name="license_key" readonly>
+                        </label>
+                        <div class="detail-meta">
+                            <p id="detailProduct">—</p>
+                            <p id="detailUsage">0 / 0 activations</p>
+                        </div>
+                        <label>Status
+                            <select name="status">
+                                <option value="active">Active</option>
+                                <option value="suspended">Suspended</option>
+                                <option value="revoked">Revoked</option>
+                            </select>
+                        </label>
+                        <label>Expires At
+                            <input name="expires_at" placeholder="2025-12-31 or blank for none">
+                        </label>
+                        <label>Max Activations
+                            <input name="max_activations" type="number" min="1" placeholder="Inherit from product">
+                        </label>
+                        <label>Notes
+                            <textarea name="notes" rows="3" placeholder="Internal note"></textarea>
+                        </label>
+                        <div class="button-row split">
+                            <button type="submit">Save Changes</button>
+                            <button type="button" class="ghost danger" id="deleteLicenseButton">Delete</button>
+                        </div>
+                    </form>
+                </article>
             </div>
-            <form id="validateForm" class="stack">
-                <label>Product Code
-                    <input name="product_code" required>
-                </label>
-                <label>License Key
-                    <input name="license_key" required>
-                </label>
-                <label>Instance ID (optional)
-                    <input name="instance_id" placeholder="site-123">
-                </label>
-                <div class="button-row">
-                    <button type="submit">Validate License</button>
-                </div>
-            </form>
-        </article>
-
-        <article class="card">
-            <div class="card-head">
-                <h3>Activate / Deactivate</h3>
-                <p>Simulate a client claiming or freeing an activation slot.</p>
-            </div>
-            <form id="activateForm" class="stack">
-                <label>Product Code
-                    <input name="product_code" required>
-                </label>
-                <label>License Key
-                    <input name="license_key" required>
-                </label>
-                <label>Instance ID
-                    <input name="instance_id" required>
-                </label>
-                <label>Domain
-                    <input name="domain" placeholder="client.com">
-                </label>
-                <label>User Agent
-                    <input name="user_agent" placeholder="woocommerce/8.0">
-                </label>
-                <div class="button-row split">
-                    <button type="button" data-action="activate">Activate</button>
-                    <button type="button" data-action="deactivate" class="ghost">Deactivate</button>
-                </div>
-            </form>
-        </article>
+        </div>
     </section>
 
     <section class="card log">
@@ -163,80 +191,6 @@ if (($segments[0] ?? '') !== 'api') {
             <p>Every request and response captured for auditing.</p>
         </div>
         <div id="log"></div>
-    </section>
-
-    <section class="api-docs">
-        <div class="card-head">
-            <h3>Calling the API</h3>
-            <p>Four POST endpoints, each returning JSON in the same envelope.</p>
-        </div>
-        <div class="doc-grid">
-            <article class="doc-card" data-sample="issue">
-                <header>
-                    <span class="pill issue"></span>
-                    <strong>POST /api/licenses/issue</strong>
-                </header>
-                <p>Admin-only endpoint for creating keys. Requires a logged-in admin session (cookie).</p>
-                <ul>
-                    <li><code>product_code</code> (required)</li>
-                    <li><code>license_key</code>, <code>expires_at</code>, <code>max_activations</code>, <code>notes</code>, <code>status</code></li>
-                </ul>
-                <pre><code># Login first: curl -c cookie.txt -X POST https://example.com/api/users/login \
-#   -H "Content-Type: application/json" -d '{"email":"","password":""}'
-curl -X POST "$BASE/issue" \
-  -H "Content-Type: application/json" \
-  -b cookie.txt \
-  -d '{"product_code":"APP_PRO"}'</code></pre>
-                <button type="button" class="copy">Copy Sample</button>
-            </article>
-
-            <article class="doc-card" data-sample="activate">
-                <header>
-                    <span class="pill activate"></span>
-                    <strong>POST /api/licenses/activate</strong>
-                </header>
-                <p>Called by clients to reserve an activation slot (idempotent per instance).</p>
-                <ul>
-                    <li><code>license_key</code>, <code>product_code</code>, <code>instance_id</code> (required)</li>
-                    <li><code>domain</code>, <code>user_agent</code> optional</li>
-                </ul>
-                <pre><code>curl -X POST "$BASE/activate" \
-  -H "Content-Type: application/json" \
-  -d '{"license_key":"XXXX","product_code":"APP_PRO","instance_id":"site-123"}'</code></pre>
-                <button type="button" class="copy">Copy Sample</button>
-            </article>
-
-            <article class="doc-card" data-sample="validate">
-                <header>
-                    <span class="pill validate"></span>
-                    <strong>POST /api/licenses/validate</strong>
-                </header>
-                <p>Heartbeat endpoint returning status, expiry, and activation counts.</p>
-                <ul>
-                    <li><code>license_key</code>, <code>product_code</code> (required)</li>
-                    <li><code>instance_id</code> optional to refresh that activation's timestamp</li>
-                </ul>
-                <pre><code>curl -X POST "$BASE/validate" \
-  -H "Content-Type: application/json" \
-  -d '{"license_key":"XXXX","product_code":"APP_PRO"}'</code></pre>
-                <button type="button" class="copy">Copy Sample</button>
-            </article>
-
-            <article class="doc-card" data-sample="deactivate">
-                <header>
-                    <span class="pill deactivate"></span>
-                    <strong>POST /api/licenses/deactivate</strong>
-                </header>
-                <p>Removes an activation so another domain/device can take its place.</p>
-                <ul>
-                    <li><code>license_key</code>, <code>product_code</code>, <code>instance_id</code> (required)</li>
-                </ul>
-                <pre><code>curl -X POST "$BASE/deactivate" \
-  -H "Content-Type: application/json" \
-  -d '{"license_key":"XXXX","product_code":"APP_PRO","instance_id":"site-123"}'</code></pre>
-                <button type="button" class="copy">Copy Sample</button>
-            </article>
-        </div>
     </section>
 </main>
 
@@ -277,8 +231,22 @@ $action = $segments[2] ?? '';
 
 try {
     if ($resource === 'licenses') {
+        if ($method === 'GET') {
+            ensureSession();
+            $userId = requireAuthenticatedUser(true);
+            requireAdmin($userId);
+            $filters = [
+                'search' => $_GET['search'] ?? null,
+                'status' => $_GET['status'] ?? null,
+                'limit' => $_GET['limit'] ?? null,
+                'offset' => $_GET['offset'] ?? null,
+            ];
+            $result = $licenseService->listLicenses($filters);
+            respond(200, ['success' => true, 'data' => $result]);
+        }
+
         if ($method !== 'POST') {
-            respond(405, ['error' => 'Only POST is supported for licenses.']);
+            respond(405, ['error' => 'Unsupported method for licenses.']);
         }
         $payload = readJsonPayload();
         $result = handleLicenseAction($licenseService, $action, $payload, $config);
@@ -303,11 +271,12 @@ function handleLicenseAction(LicenseService $service, string $action, array $pay
 {
     $ip = $_SERVER['REMOTE_ADDR'] ?? null;
 
-    if (!in_array($action, ['issue', 'activate', 'deactivate', 'validate'], true)) {
+    if (!in_array($action, ['issue', 'activate', 'deactivate', 'validate', 'update', 'delete'], true)) {
         throw new RuntimeException('Unknown license route.');
     }
 
     if ($action !== 'validate') {
+        ensureSession();
         $userId = requireAuthenticatedUser(true);
         requireAdmin($userId);
     }
@@ -317,6 +286,8 @@ function handleLicenseAction(LicenseService $service, string $action, array $pay
         'activate' => $service->activate($payload, $ip),
         'validate' => $service->validate($payload),
         'deactivate' => $service->deactivate($payload),
+        'update' => $service->updateLicense($payload),
+        'delete' => $service->deleteLicense($payload),
         default => throw new RuntimeException('Unsupported route.'),
     };
 }
