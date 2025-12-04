@@ -1,9 +1,0 @@
-[
-  {
-    "id": "seed-user-1",
-    "name": "Demo User",
-    "email": "demo@example.com",
-    "password": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZ2uVH54byzatoHtr1cGukdxbYF92.",
-    "createdAt": "2024-01-01T00:00:00.000Z"
-  }
-]
