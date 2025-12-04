@@ -57,6 +57,10 @@ body {
     align-items: start;
 }
 
+.portal-hero {
+    margin-bottom: 3.5rem;
+}
+
 .eyebrow {
     letter-spacing: 0.35em;
     text-transform: uppercase;
@@ -131,6 +135,19 @@ a.cta.ghost {
     margin-top: 0;
 }
 
+.session-meta {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem 1.5rem;
+}
+
+.form-note {
+    margin: 0;
+}
+
 label {
     display: flex;
     flex-direction: column;
@@ -189,6 +206,72 @@ small {
     border-radius: inherit;
     pointer-events: none;
     border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.8rem;
+    margin-bottom: 2.8rem;
+}
+
+.portal-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    min-height: 100%;
+}
+
+.portal-card button,
+.portal-card .button-link {
+    margin-top: auto;
+    align-self: flex-start;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.badge-gold { border-color: rgba(252, 238, 10, 0.5); color: var(--accent); }
+.badge-cyan { border-color: rgba(94, 240, 255, 0.5); color: var(--accent-2); }
+.badge-violet { border-color: rgba(194, 128, 255, 0.5); color: #c280ff; }
+
+.portal-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: var(--muted);
+}
+
+.portal-list li {
+    margin-bottom: 0.4rem;
+}
+
+.button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: linear-gradient(125deg, var(--accent), var(--accent-2));
+    color: #05050a;
+    box-shadow: 0 15px 25px rgba(94, 240, 255, 0.3);
+}
+
+.button-link.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none;
 }
 
 .card-head h3 {
@@ -424,6 +507,7 @@ button.ghost.danger {
     background: var(--accent);
 }
 
+.doc-card .pill.issue { background: var(--accent); }
 .doc-card .pill.activate { background: #6effa5; }
 .doc-card .pill.validate { background: #5ef0ff; }
 .doc-card .pill.deactivate { background: #ffb347; }
@@ -447,6 +531,20 @@ code {
     padding: 0.5rem 1.2rem;
     font-size: 0.85rem;
     border-radius: 999px;
+}
+
+.api-quickstart {
+    margin-bottom: 2.8rem;
+}
+
+.support-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.support-card h4 {
+    margin: 0.3rem 0;
 }
 
 .toast {

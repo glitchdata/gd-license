@@ -19,7 +19,7 @@ if (($segments[0] ?? '') !== 'api') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>GD License Server · Control Room</title>
+    <title>GD License Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
@@ -28,29 +28,28 @@ if (($segments[0] ?? '') !== 'api') {
 <body>
 <div class="bg"></div>
 <main class="wrap">
-    <header class="masthead">
-        <div>
-            <p class="eyebrow">Glitchdata · License Ops</p>
-            <h1>Log into the control room.</h1>
-            <p class="lede">Sign in with your admin credentials right on the front page, then issue licenses, simulate activations, and inspect the JSON API responses without leaving this view.</p>
+    <header class="masthead portal-hero" id="portalHero">
+        <div class="masthead-copy">
+            <p class="eyebrow">Glitchdata · Licensing</p>
+            <h1>Welcome to the License Portal.</h1>
+            <p class="lede">One landing zone for admins, operators, and customers to manage software entitlements, review activity, and grab API-friendly snippets.</p>
             <div class="cta-row">
-                <a class="cta" href="#authPanel">Go to Admin Login</a>
-                <a class="cta ghost" href="/user/">Customer Portal</a>
+                <a class="cta" href="#adminPanel">Admin Login</a>
+                <a class="cta ghost" href="/user/">Customer Login</a>
             </div>
             <ul class="callouts">
-                <li>Admins sign in with email + password using the panel on the right.</li>
-                <li>Issue / activate / deactivate endpoints require an authenticated admin session.</li>
-                <li>All traffic targets <code>/api/licenses/*</code> over HTTPS.</li>
-                <li>Keep this console behind HTTP auth or an allow-listed VPN.</li>
-                <li>Customers sign in at <a href="/user/">/user/</a> with their email + password.</li>
+                <li>Centralized entry point for internal ops, customer success, and engineering.</li>
+                <li>Sessions use SameSite=Strict cookies, so keep this page on a secure network.</li>
+                <li>Customers still authenticate through <a href="/user/">/user/</a> with their own credentials.</li>
+                <li>Quick-start API snippets below auto-update with your preferred base URL.</li>
             </ul>
         </div>
-        <div class="panel session-panel" id="authPanel">
+        <div class="panel session-panel" id="adminPanel">
             <div class="session-header">
                 <div>
                     <p class="eyebrow">Admin Session</p>
                     <h2 id="sessionState">Not signed in</h2>
-                    <p class="muted">Issue / activate / deactivate endpoints require a logged-in admin.</p>
+                    <p class="muted" id="sessionSummary">Use your Glitchdata admin credentials to unlock the control room.</p>
                 </div>
                 <div class="session-actions hidden" id="sessionActions">
                     <button type="button" class="ghost" id="sessionRefresh">Refresh</button>
@@ -63,147 +62,119 @@ if (($segments[0] ?? '') !== 'api') {
                     <input type="email" name="email" placeholder="you@glitchdata.com" autocomplete="email" required>
                 </label>
                 <label>Password
-                    <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+                    <input type="password" name="password" placeholder="********" autocomplete="current-password" required>
                 </label>
                 <button type="submit">Sign In</button>
+                <p class="muted form-note">Your session stays scoped to this domain until you refresh or sign out.</p>
             </form>
 
-            <label>API Base URL
-                <input type="url" id="baseUrl" value="/api/licenses" autocomplete="off">
-                <small>E.g. <code>https://license.glitchdata.com/api/licenses</code></small>
-            </label>
-            <label>Preferred Product Code
-                <input type="text" id="defaultProduct" placeholder="APP_PRO" autocomplete="off">
-                <small>Pre-fills each form to speed up testing.</small>
-            </label>
+            <div class="session-meta">
+                <label>API Base URL
+                    <input type="url" id="baseUrl" value="/api/licenses" autocomplete="off">
+                    <small>E.g. <code>https://license.glitchdata.com/api/licenses</code></small>
+                </label>
+                <label>Favorite Product Code
+                    <input type="text" id="defaultProduct" placeholder="APP_PRO" autocomplete="off">
+                    <small>We use this to hydrate the quickstart snippets.</small>
+                </label>
+            </div>
         </div>
     </header>
 
-curl -X POST "$BASE/issue" \
-    <section class="dashboard hidden" id="licenseDashboard">
-        <div class="dashboard-head">
+    <section class="portal-grid" aria-label="Primary destinations">
+        <article class="card portal-card">
+            <span class="badge badge-gold">Admin</span>
+            <h3>Operations Control</h3>
+            <p>Sign in to issue, suspend, and audit licenses with full CRUD access.</p>
+            <ul class="portal-list">
+                <li>Real-time activation counts & status toggles.</li>
+                <li>Notes for customer handoffs.</li>
+                <li>Human-friendly keys plus API parity.</li>
+            </ul>
+            <button type="button" data-link="#adminPanel">Jump to Login</button>
+        </article>
+        <article class="card portal-card">
+            <span class="badge badge-cyan">Customer Success</span>
+            <h3>Customer Workspace</h3>
+            <p>Point users to the self-service portal to activate, download, and manage devices.</p>
+            <ul class="portal-list">
+                <li>Customer ready UI mapped to their licenses.</li>
+                <li>Same identity store, scoped privileges.</li>
+                <li>Easy handoff from support tickets.</li>
+            </ul>
+            <a class="button-link ghost" href="/user/">Open Customer Portal</a>
+        </article>
+        <article class="card portal-card">
+            <span class="badge badge-violet">Engineering</span>
+            <h3>API & Integrations</h3>
+            <p>Use the curated snippets below to script license lifecycles or wire up CI workflows.</p>
+            <ul class="portal-list">
+                <li>JWT-free admin endpoints (session cookie).</li>
+                <li>Activation validation for clients.</li>
+                <li>Simple JSON responses for monitoring.</li>
+            </ul>
+            <button type="button" class="ghost" data-link="#apiQuickstart">View Snippets</button>
+        </article>
+    </section>
+
+    <section class="card api-quickstart" id="apiQuickstart">
+        <div class="card-head">
             <div>
-                <h3>Licenses</h3>
-                <p>Search, filter, and edit your fleet of keys the moment you log in.</p>
-            </div>
-            <div class="filters">
-                <input type="search" id="licenseSearch" placeholder="Search by license, product, or customer">
-                <select id="licenseStatus">
-                    <option value="">All statuses</option>
-                    <option value="active">Active</option>
-                    <option value="suspended">Suspended</option>
-                    <option value="revoked">Revoked</option>
-                </select>
-                <button type="button" class="ghost" id="licenseRefreshButton">Refresh</button>
+                <p class="eyebrow">API Quickstart</p>
+                <h3>Hit the endpoints in minutes.</h3>
+                <p class="muted">Snippets update with your base URL and favorite product code.</p>
             </div>
         </div>
-        <div class="dashboard-body">
-            <div class="list-panel">
-                <div class="table-wrapper">
-                    <table class="license-table">
-                        <thead>
-                            <tr>
-                                <th>License</th>
-                                <th>Product</th>
-                                <th>Status</th>
-                                <th>Expires</th>
-                                <th>Usage</th>
-                            </tr>
-                        </thead>
-                        <tbody id="licenseTableBody"></tbody>
-                    </table>
-                    <div class="empty-state hidden" id="licenseEmpty">
-                        <p>No licenses match your filters yet.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="detail-panel">
-                <article class="card compact">
-                    <div class="card-head">
-                        <h3>Issue License</h3>
-                        <p>Generate a brand-new key or reuse an existing value.</p>
-                    </div>
-                    <form id="issueForm" class="stack">
-                        <label>Product Code
-                            <input name="product_code" required>
-                        </label>
-                        <label>License Key (optional)
-                            <input name="license_key" placeholder="Auto-generate when blank">
-                        </label>
-                        <label>Expires At
-                            <input name="expires_at" placeholder="2025-12-31 or +1 year">
-                        </label>
-                        <label>Max Activations
-                            <input name="max_activations" type="number" min="1" placeholder="Default to product allowance">
-                        </label>
-                        <label>Notes
-                            <textarea name="notes" rows="2" placeholder="Internal note"></textarea>
-                        </label>
-                        <div class="button-row">
-                            <button type="submit">Issue License</button>
-                        </div>
-                    </form>
-                </article>
-
-                <article class="card compact">
-                    <div class="card-head">
-                        <h3>License Details</h3>
-                        <p>Pick a license from the table to edit status, limits, or notes.</p>
-                    </div>
-                    <div id="licenseDetailEmpty" class="muted">Select a license to view its details.</div>
-                    <form id="licenseDetailForm" class="stack hidden">
-                        <label>License Key
-                            <input name="license_key" readonly>
-                        </label>
-                        <div class="detail-meta">
-                            <p id="detailProduct">—</p>
-                            <p id="detailUsage">0 / 0 activations</p>
-                        </div>
-                        <label>Status
-                            <select name="status">
-                                <option value="active">Active</option>
-                                <option value="suspended">Suspended</option>
-                                <option value="revoked">Revoked</option>
-                            </select>
-                        </label>
-                        <label>Expires At
-                            <input name="expires_at" placeholder="2025-12-31 or blank for none">
-                        </label>
-                        <label>Max Activations
-                            <input name="max_activations" type="number" min="1" placeholder="Inherit from product">
-                        </label>
-                        <label>Notes
-                            <textarea name="notes" rows="3" placeholder="Internal note"></textarea>
-                        </label>
-                        <div class="button-row split">
-                            <button type="submit">Save Changes</button>
-                            <button type="button" class="ghost danger" id="deleteLicenseButton">Delete</button>
-                        </div>
-                    </form>
-                </article>
-            </div>
+        <div class="doc-grid">
+            <article class="doc-card" data-snippet="issue">
+                <header>
+                    <span class="pill issue"></span>
+                    <strong>Issue License</strong>
+                </header>
+                <p class="muted">Admin-only endpoint for generating or reissuing keys.</p>
+                <pre><code></code></pre>
+                <button type="button" class="copy" data-copy="issue">Copy snippet</button>
+            </article>
+            <article class="doc-card" data-snippet="activate">
+                <header>
+                    <span class="pill activate"></span>
+                    <strong>Activate Instance</strong>
+                </header>
+                <p class="muted">Call from installers or agents to reserve an activation slot.</p>
+                <pre><code></code></pre>
+                <button type="button" class="copy" data-copy="activate">Copy snippet</button>
+            </article>
+            <article class="doc-card" data-snippet="validate">
+                <header>
+                    <span class="pill validate"></span>
+                    <strong>Validate License</strong>
+                </header>
+                <p class="muted">Ping periodically from the product to confirm status.</p>
+                <pre><code></code></pre>
+                <button type="button" class="copy" data-copy="validate">Copy snippet</button>
+            </article>
         </div>
     </section>
 
-    <section class="card log">
+    <section class="card support" id="support">
         <div class="card-head">
-            <h3>Live Console</h3>
-            <p>Every request and response captured for auditing.</p>
+            <h3>Need a human?</h3>
+            <p>Ops and support share this data set. Reach out when you need deeper changes.</p>
         </div>
-        <div id="log"></div>
+        <div class="support-grid">
+            <div class="support-card">
+                <p class="eyebrow">Operational requests</p>
+                <h4>ops@glitchdata.com</h4>
+                <p class="muted">Batch imports, large revocations, custom reporting.</p>
+            </div>
+            <div class="support-card">
+                <p class="eyebrow">Customer escalations</p>
+                <h4>support@glitchdata.com</h4>
+                <p class="muted">Specific license troubleshooting or instance resets.</p>
+            </div>
+        </div>
     </section>
 </main>
-
-<template id="logEntry">
-    <div class="entry">
-        <div class="entry-head">
-            <span class="pill"></span>
-            <strong class="label"></strong>
-            <span class="time"></span>
-        </div>
-        <div class="entry-body"></div>
-    </div>
-</template>
 
 <script src="/assets/main.js" defer></script>
 </body>
