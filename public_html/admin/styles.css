@@ -168,7 +168,11 @@ button.ghost {
 }
 
 input[type="search"],
-select {
+select,
+.detail-form input,
+.detail-form select,
+.form-stack input,
+.form-stack select {
     font: inherit;
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.18);
@@ -180,6 +184,29 @@ select {
 
 input::placeholder {
     color: rgba(244, 246, 255, 0.5);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 110px;
+    border-radius: 18px;
+}
+
+.detail-form textarea,
+.form-stack textarea {
+    font: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    padding: 0.8rem 1rem;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-size: 0.9rem;
+    color: var(--muted);
 }
 
 .table-wrapper {
@@ -297,6 +324,56 @@ input::placeholder {
 
 .detail-notes h4 {
     margin: 0 0 0.6rem;
+}
+
+.detail-form {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.form-actions .danger {
+    border-color: rgba(255, 111, 111, 0.6);
+    color: var(--danger);
+}
+
+.issue-card button,
+.detail-form button {
+    align-self: flex-start;
+}
+
+button.danger {
+    color: var(--danger);
+    border-color: rgba(255, 111, 111, 0.5);
+}
+
+#detailEmpty {
+    margin-top: 1rem;
+}
+
+.issue-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 @media (max-width: 768px) {

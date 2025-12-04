@@ -10,6 +10,11 @@ const licenseStatus = document.querySelector('#licenseStatus');
 const licenseRefresh = document.querySelector('#licenseRefresh');
 const clearFiltersButton = document.querySelector('#clearFilters');
 const rowTemplate = document.querySelector('#licenseRow');
+const issueForm = document.querySelector('#issueForm');
+const detailForm = document.querySelector('#detailForm');
+const detailEmpty = document.querySelector('#detailEmpty');
+const deleteLicenseButton = document.querySelector('#deleteLicense');
+const scrollIssueButton = document.querySelector('#scrollIssue');
 
 const detailKey = document.querySelector('#detailKey');
 const detailProduct = document.querySelector('#detailProduct');
@@ -53,6 +58,66 @@ clearFiltersButton?.addEventListener('click', () => {
     if (licenseSearch) licenseSearch.value = '';
     if (licenseStatus) licenseStatus.value = '';
     loadLicenses();
+});
+
+scrollIssueButton?.addEventListener('click', () => {
+    document.querySelector('#issueCard')?.scrollIntoView({ behavior: 'smooth' });
+});
+
+issueForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const payload = formToJSON(issueForm);
+    try {
+        const data = await callLicenseApi('issue', payload);
+        if (data?.license) {
+            toast('License issued.');
+            issueForm.reset();
+            selectedKey = data.license.license_key;
+            await loadLicenses();
+        }
+    } catch (error) {
+        toast(error.message || 'Issue failed', 'error');
+    }
+});
+
+detailForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!selectedKey) {
+        toast('Select a license first.', 'error');
+        return;
+    }
+    const payload = formToJSON(detailForm, { includeEmpty: true });
+    payload.license_key = selectedKey;
+    try {
+        const data = await callLicenseApi('update', payload);
+        if (data?.license) {
+            toast('License updated.');
+            selectedKey = data.license.license_key;
+            await loadLicenses();
+        }
+    } catch (error) {
+        toast(error.message || 'Update failed', 'error');
+    }
+});
+
+deleteLicenseButton?.addEventListener('click', async () => {
+    if (!selectedKey) {
+        toast('Select a license first.', 'error');
+        return;
+    }
+    const confirmed = window.confirm('Delete this license? This cannot be undone.');
+    if (!confirmed) return;
+    try {
+        const data = await callLicenseApi('delete', { license_key: selectedKey });
+        if (data?.deleted) {
+            toast('License deleted.');
+            selectedKey = null;
+            await loadLicenses();
+            renderDetail(null);
+        }
+    } catch (error) {
+        toast(error.message || 'Delete failed', 'error');
+    }
 });
 
 async function refreshSession() {
@@ -103,6 +168,8 @@ async function loadLicenses() {
             } else {
                 renderDetail(null);
             }
+        } else {
+            renderDetail(null);
         }
     } catch (error) {
         toast(error.message || 'Unable to load licenses.', 'error');
@@ -150,6 +217,8 @@ function renderDetail(license) {
         detailStatus.textContent = detailExpires.textContent = detailCreated.textContent = detailUpdated.textContent = detailUsage.textContent = detailRemaining.textContent = '—';
         detailNotes.textContent = '—';
         selectedKey = null;
+        setDetailFormVisible(false);
+        detailForm?.reset();
         return;
     }
 
@@ -162,6 +231,8 @@ function renderDetail(license) {
     detailUsage.textContent = `${license.activations_in_use} of ${license.max_activations}`;
     detailRemaining.textContent = license.activations_remaining ?? '—';
     detailNotes.textContent = license.notes || '—';
+    populateDetailForm(license);
+    setDetailFormVisible(true);
 }
 
 function setSessionState(title, meta) {
@@ -216,6 +287,50 @@ function toast(message, type) {
     note.textContent = message;
     document.body.appendChild(note);
     setTimeout(() => note.remove(), 3200);
+}
+
+function formToJSON(form, options = {}) {
+    const includeEmpty = options.includeEmpty ?? false;
+    return Array.from(new FormData(form).entries()).reduce((acc, [key, value]) => {
+        if (!includeEmpty && value === '') {
+            return acc;
+        }
+        acc[key] = value;
+        return acc;
+    }, {});
+}
+
+function populateDetailForm(license) {
+    if (!detailForm) return;
+    if (detailForm.elements.status) detailForm.elements.status.value = license.status;
+    if (detailForm.elements.expires_at) {
+        detailForm.elements.expires_at.value = license.expires_at ?? '';
+    }
+    if (detailForm.elements.max_activations) {
+        detailForm.elements.max_activations.value = license.max_activations ?? '';
+    }
+    if (detailForm.elements.notes) {
+        detailForm.elements.notes.value = license.notes ?? '';
+    }
+}
+
+function setDetailFormVisible(isVisible) {
+    if (detailForm) detailForm.classList.toggle('hidden', !isVisible);
+    if (detailEmpty) detailEmpty.classList.toggle('hidden', isVisible);
+}
+
+async function callLicenseApi(action, payload) {
+    const response = await fetch(`/api/licenses/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || body.error) {
+        throw new Error(body.error || 'API error');
+    }
+    return body.data;
 }
 
 document.head.insertAdjacentHTML(

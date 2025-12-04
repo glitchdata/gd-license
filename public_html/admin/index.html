@@ -53,6 +53,7 @@
                     <option value="revoked">Revoked</option>
                 </select>
                 <button type="button" class="ghost" id="licenseRefresh">Reload</button>
+                <button type="button" id="scrollIssue">Issue License</button>
             </div>
         </div>
         <div class="table-wrapper">
@@ -111,6 +112,57 @@
             <h4>Notes</h4>
             <p id="detailNotes">—</p>
         </div>
+        <p class="muted" id="detailEmpty">Select a license to edit its settings.</p>
+        <form id="detailForm" class="detail-form hidden" method="post">
+            <div class="form-grid">
+                <label>Status
+                    <select name="status" required>
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="revoked">Revoked</option>
+                    </select>
+                </label>
+                <label>Expires At
+                    <input type="text" name="expires_at" placeholder="YYYY-MM-DD or +1 year">
+                </label>
+                <label>Max Activations
+                    <input type="number" name="max_activations" min="1" placeholder="Inherit product">
+                </label>
+            </div>
+            <label>Notes
+                <textarea name="notes" rows="3" placeholder="Internal note"></textarea>
+            </label>
+            <div class="form-actions">
+                <button type="submit">Save Changes</button>
+                <button type="button" class="ghost danger" id="deleteLicense">Delete License</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card issue-card" id="issueCard">
+        <header>
+            <p class="eyebrow">Create</p>
+            <h3>Issue License</h3>
+            <p class="muted">Generate a brand-new key or reuse an existing value.</p>
+        </header>
+        <form id="issueForm" class="form-stack" method="post">
+            <label>Product Code
+                <input name="product_code" required>
+            </label>
+            <label>License Key (optional)
+                <input name="license_key" placeholder="Leave blank to auto-generate">
+            </label>
+            <label>Expires At
+                <input name="expires_at" placeholder="YYYY-MM-DD or +1 year">
+            </label>
+            <label>Max Activations
+                <input type="number" name="max_activations" min="1" placeholder="Use product default">
+            </label>
+            <label>Notes
+                <textarea name="notes" rows="2" placeholder="Internal note"></textarea>
+            </label>
+            <button type="submit">Issue License</button>
+        </form>
     </section>
 </main>
 
