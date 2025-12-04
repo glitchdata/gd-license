@@ -48,12 +48,11 @@ if (($segments[0] ?? '') !== 'api') {
             <div class="session-header">
                 <div>
                     <p class="eyebrow">Admin Session</p>
-                    <h2 id="sessionState">Not signed in</h2>
+                    <h2 id="sessionState"></h2>
                     <p class="muted" id="sessionSummary">Use your Glitchdata admin credentials to unlock the control room.</p>
                 </div>
                 <div class="session-actions hidden" id="sessionActions">
                     <button type="button" class="ghost" id="sessionRefresh">Refresh</button>
-                    <button type="button" id="sessionLogout">Logout</button>
                 </div>
             </div>
 

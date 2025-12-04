@@ -316,7 +316,7 @@ function updateSessionUI(message) {
             dashboard?.classList.add('hidden');
         }
     } else {
-        sessionStateEl.textContent = message || 'Not signed in';
+        sessionStateEl.textContent = message || '';
         sessionActionsEl.classList.add('hidden');
         loginForm?.classList.remove('hidden');
         dashboard?.classList.add('hidden');
