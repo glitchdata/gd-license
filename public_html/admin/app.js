@@ -1,119 +1,223 @@
-const forms = {
-    issue: document.querySelector('#issueForm'),
-    validate: document.querySelector('#validateForm'),
-    activate: document.querySelector('#activateForm'),
-};
+const sessionState = document.querySelector('#sessionState');
+const sessionMeta = document.querySelector('#sessionMeta');
+const sessionRefresh = document.querySelector('#sessionRefresh');
+const sessionLogout = document.querySelector('#sessionLogout');
+const licenseCountEl = document.querySelector('#licenseCount');
+const licenseTableBody = document.querySelector('#licenseTableBody');
+const licenseEmpty = document.querySelector('#licenseEmpty');
+const licenseSearch = document.querySelector('#licenseSearch');
+const licenseStatus = document.querySelector('#licenseStatus');
+const licenseRefresh = document.querySelector('#licenseRefresh');
+const clearFiltersButton = document.querySelector('#clearFilters');
+const rowTemplate = document.querySelector('#licenseRow');
 
-const log = document.querySelector('#log');
-const template = document.querySelector('#logEntry');
-const baseInput = document.querySelector('#baseUrl');
-const adminTokenInput = document.querySelector('#adminToken');
+const detailKey = document.querySelector('#detailKey');
+const detailProduct = document.querySelector('#detailProduct');
+const detailStatus = document.querySelector('#detailStatus');
+const detailExpires = document.querySelector('#detailExpires');
+const detailCreated = document.querySelector('#detailCreated');
+const detailUpdated = document.querySelector('#detailUpdated');
+const detailUsage = document.querySelector('#detailUsage');
+const detailRemaining = document.querySelector('#detailRemaining');
+const detailNotes = document.querySelector('#detailNotes');
 
-const STORAGE_KEY = 'gd-license-console';
-const persisted = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-if (persisted.baseUrl) baseInput.value = persisted.baseUrl;
-if (persisted.adminToken) adminTokenInput.value = persisted.adminToken;
+let profile = null;
+let licenses = [];
+let selectedKey = null;
+let searchTimer = null;
 
-adminTokenInput.addEventListener('input', () => persist());
-baseInput.addEventListener('input', () => persist());
+sessionRefresh?.addEventListener('click', () => {
+    refreshSession().then(() => toast('Session refreshed.'));
+});
 
-function persist() {
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-            baseUrl: baseInput.value.trim() || '/api/licenses',
-            adminToken: adminTokenInput.value,
-        })
-    );
+sessionLogout?.addEventListener('click', async () => {
+    try {
+        await userApi('/logout', { method: 'POST' });
+    } catch (error) {
+        console.warn(error);
+    }
+    toast('Signed out.');
+    window.location.assign('/');
+});
+
+licenseRefresh?.addEventListener('click', () => loadLicenses());
+
+licenseSearch?.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadLicenses(), 350);
+});
+
+licenseStatus?.addEventListener('change', () => loadLicenses());
+
+clearFiltersButton?.addEventListener('click', () => {
+    if (licenseSearch) licenseSearch.value = '';
+    if (licenseStatus) licenseStatus.value = '';
+    loadLicenses();
+});
+
+async function refreshSession() {
+    setSessionState('Checking session…', 'Attempting to load your admin profile.');
+    try {
+        const data = await userApi('/me');
+        if (!data?.profile?.is_admin) {
+            throw new Error('Admin privileges required.');
+        }
+        profile = data.profile;
+        setSessionState(`Signed in as ${profile.full_name}`, profile.email);
+        await loadLicenses();
+    } catch (error) {
+        profile = null;
+        setSessionState('Sign in required', error.message || 'Please return to the portal and log in as an admin.');
+        licenses = [];
+        renderLicenseTable();
+    }
 }
 
-forms.issue.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const payload = formToJSON(event.target);
-    await callApi('issue', payload, true);
-});
-
-forms.validate.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const payload = formToJSON(event.target);
-    await callApi('validate', payload);
-});
-
-forms.activate.querySelectorAll('button[data-action]').forEach((button) => {
-    button.addEventListener('click', async () => {
-        const action = button.dataset.action;
-        const payload = formToJSON(forms.activate);
-        await callApi(action, payload);
-    });
-});
-
-async function callApi(action, payload, needsToken = false) {
-    const baseUrl = baseInput.value.trim() || '/api/licenses';
-    const url = `${baseUrl.replace(/\/$/, '')}/${action}`;
-
-    const headers = {
-        'Content-Type': 'application/json',
-    };
-
-    if (needsToken) {
-        const token = adminTokenInput.value.trim();
-        if (!token) {
-            toast('Admin token required for issuing licenses.', 'error');
-            return;
-        }
-        headers['Authorization'] = `Bearer ${token}`;
+async function loadLicenses() {
+    if (!profile?.is_admin) {
+        return;
     }
-
-    const entry = createLogEntry(action, payload);
 
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(payload),
+        const params = new URLSearchParams();
+        const search = licenseSearch?.value.trim();
+        const status = licenseStatus?.value.trim();
+        if (search) params.set('search', search);
+        if (status) params.set('status', status);
+        const query = params.toString();
+        const response = await fetch(`/api/licenses${query ? `?${query}` : ''}`, {
+            method: 'GET',
+            credentials: 'include',
         });
-        const data = await response.json();
-        if (!response.ok || data.error) {
-            throw new Error(data.error || 'API error');
+        const body = await response.json();
+        if (!response.ok || body.error) {
+            throw new Error(body.error || 'Failed to load licenses.');
         }
-        entry.classList.remove('error');
-        entry.querySelector('.label').textContent = `${action.toUpperCase()} · ${response.status}`;
-        entry.querySelector('.entry-body').textContent = JSON.stringify(data, null, 2);
-        return data;
+        licenses = body.data?.licenses ?? [];
+        licenseCountEl.textContent = licenses.length.toString();
+        renderLicenseTable();
+        if (selectedKey) {
+            const active = licenses.find((item) => item.license_key === selectedKey);
+            if (active) {
+                renderDetail(active);
+            } else {
+                renderDetail(null);
+            }
+        }
     } catch (error) {
-        entry.classList.add('error');
-        entry.querySelector('.label').textContent = `${action.toUpperCase()} · ERROR`;
-        entry.querySelector('.entry-body').textContent = error.message;
-        toast(error.message, 'error');
+        toast(error.message || 'Unable to load licenses.', 'error');
+        licenses = [];
+        renderLicenseTable();
     }
 }
 
-function formToJSON(form) {
-    return Array.from(new FormData(form).entries()).reduce((acc, [key, value]) => {
-        if (value === '') return acc;
-        acc[key] = value;
-        return acc;
-    }, {});
+function renderLicenseTable() {
+    if (!licenseTableBody || !rowTemplate) return;
+    licenseTableBody.innerHTML = '';
+    if (!licenses.length) {
+        licenseEmpty?.classList.remove('hidden');
+        return;
+    }
+    licenseEmpty?.classList.add('hidden');
+
+    licenses.forEach((license) => {
+        const node = rowTemplate.content.firstElementChild.cloneNode(true);
+        node.dataset.key = license.license_key;
+        node.querySelector('.license-key').textContent = license.license_key;
+        node.querySelector('.subline').textContent = license.notes || '—';
+        node.querySelector('.product-code').textContent = `${license.product.name} · ${license.product.code}`;
+        const pill = node.querySelector('.status-pill');
+        pill.textContent = license.status;
+        pill.classList.add(license.status);
+        node.querySelector('.expires').textContent = formatDate(license.expires_at) || '—';
+        node.querySelector('.usage').textContent = `${license.activations_in_use}/${license.max_activations}`;
+        if (license.license_key === selectedKey) {
+            node.classList.add('active');
+        }
+        node.addEventListener('click', () => {
+            selectedKey = license.license_key;
+            renderDetail(license);
+            renderLicenseTable();
+        });
+        licenseTableBody.appendChild(node);
+    });
 }
 
-function createLogEntry(action, payload) {
-    const clone = template.content.firstElementChild.cloneNode(true);
-    clone.querySelector('.label').textContent = `${action.toUpperCase()} · …`;
-    clone.querySelector('.entry-body').textContent = JSON.stringify(payload, null, 2);
-    clone.querySelector('.time').textContent = new Date().toLocaleTimeString();
-    log.prepend(clone);
-    return clone;
+function renderDetail(license) {
+    if (!license) {
+        detailKey.textContent = 'Pick a license';
+        detailProduct.textContent = 'Nothing selected';
+        detailStatus.textContent = detailExpires.textContent = detailCreated.textContent = detailUpdated.textContent = detailUsage.textContent = detailRemaining.textContent = '—';
+        detailNotes.textContent = '—';
+        selectedKey = null;
+        return;
+    }
+
+    detailKey.textContent = license.license_key;
+    detailProduct.textContent = `${license.product.name} · ${license.product.code}`;
+    detailStatus.textContent = license.status;
+    detailExpires.textContent = formatDate(license.expires_at) || 'None';
+    detailCreated.textContent = formatDate(license.created_at);
+    detailUpdated.textContent = formatDate(license.updated_at);
+    detailUsage.textContent = `${license.activations_in_use} of ${license.max_activations}`;
+    detailRemaining.textContent = license.activations_remaining ?? '—';
+    detailNotes.textContent = license.notes || '—';
+}
+
+function setSessionState(title, meta) {
+    if (sessionState) sessionState.textContent = title;
+    if (sessionMeta) sessionMeta.textContent = meta;
+}
+
+async function userApi(path, options = {}) {
+    const { headers: optionHeaders = {}, body, ...rest } = options;
+    const config = {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            ...optionHeaders,
+        },
+        credentials: 'include',
+        ...rest,
+    };
+
+    if (body !== undefined) {
+        config.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(`/api/users${path}`, config);
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.error) {
+        throw new Error(payload.error || 'Request failed');
+    }
+    return payload.data;
+}
+
+function formatDate(value) {
+    if (!value) return '';
+    const date = new Date(value.replace(' ', 'T'));
+    return new Intl.DateTimeFormat(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
 }
 
 function toast(message, type) {
     const note = document.createElement('div');
-    note.className = `toast ${type}`;
+    note.className = `toast ${type || ''}`;
     note.textContent = message;
     document.body.appendChild(note);
     setTimeout(() => note.remove(), 3200);
 }
 
-// Lightweight toast styles injected dynamically
 document.head.insertAdjacentHTML(
     'beforeend',
     `<style>
@@ -121,13 +225,13 @@ document.head.insertAdjacentHTML(
             position: fixed;
             bottom: 2rem;
             right: 2rem;
-            background: rgba(5,5,10,0.9);
+            background: rgba(5, 5, 10, 0.92);
             color: white;
             padding: 0.9rem 1.2rem;
             border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             z-index: 999;
-            animation: fadeIn 0.3s ease, fadeOut 0.4s ease 2.8s forwards;
+            animation: fadeIn 0.25s ease, fadeOut 0.35s ease 2.7s forwards;
             font-family: 'Space Grotesk', sans-serif;
         }
         .toast.error { border-color: rgba(255, 111, 111, 0.6); }
@@ -135,3 +239,5 @@ document.head.insertAdjacentHTML(
         @keyframes fadeOut { to { opacity:0; transform: translateY(10px);} }
     </style>`
 );
+
+refreshSession();

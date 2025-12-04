@@ -7,124 +7,126 @@
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>License Server Console</title>
+    <title>License Control Center · Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="grad-background"></div>
-    <main class="shell">
-        <header class="hero">
-            <div>
-                <p class="eyebrow">GD License Server</p>
-                <h1>Operator Console</h1>
-                <p class="lede">Issue keys, monitor activations, and run validation checks without touching curl. Bring your admin token and go.</p>
+<div class="aura"></div>
+<main class="admin-wrap">
+    <header class="admin-hero">
+        <div>
+            <p class="eyebrow">Glitchdata · Admin</p>
+            <h1>License Control Center</h1>
+            <p class="lede">Search, review, and audit every entitlement without leaving the browser.</p>
+            <div class="hero-links">
+                <a href="/" class="link">Back to Portal</a>
+                <a href="/user/" class="link ghost">Customer Portal</a>
             </div>
-            <div class="status-panel">
-                <label>Admin Token</label>
-                <input type="password" id="adminToken" placeholder="Bearer token" autocomplete="off">
-                <label>API Base URL</label>
-                <input type="url" id="baseUrl" value="/api/licenses" autocomplete="off">
-                <small>The GUI talks directly to your public API. Keep this page private.</small>
-            </div>
-        </header>
-
-        <section class="grid">
-            <article class="card" id="issueCard">
-                <div class="card-head">
-                    <h2>Issue License</h2>
-                    <p>Create a new license or regenerate a key for a product.</p>
-                </div>
-                <form id="issueForm" class="stack">
-                    <label>Product Code
-                        <input name="product_code" required>
-                    </label>
-                    <label>License Key (optional)
-                        <input name="license_key" placeholder="Auto-generate if empty">
-                    </label>
-                    <label>Expires At
-                        <input name="expires_at" placeholder="YYYY-MM-DD or +1 year">
-                    </label>
-                    <label>Max Activations
-                        <input name="max_activations" type="number" min="1" placeholder="Falls back to product default">
-                    </label>
-                    <label>Notes
-                        <textarea name="notes" rows="2" placeholder="Internal note"></textarea>
-                    </label>
-                    <button type="submit">Issue</button>
-                </form>
-            </article>
-
-            <article class="card" id="validateCard">
-                <div class="card-head">
-                    <h2>Validate License</h2>
-                    <p>Check the status of an existing key and see activation usage.</p>
-                </div>
-                <form id="validateForm" class="stack">
-                    <label>Product Code
-                        <input name="product_code" required>
-                    </label>
-                    <label>License Key
-                        <input name="license_key" required>
-                    </label>
-                    <label>Instance ID (optional)
-                        <input name="instance_id" placeholder="site-123">
-                    </label>
-                    <button type="submit">Validate</button>
-                </form>
-            </article>
-
-            <article class="card" id="activateCard">
-                <div class="card-head">
-                    <h2>Activate / Deactivate</h2>
-                    <p>Simulate client calls to test activation counting.</p>
-                </div>
-                <form id="activateForm" class="stack">
-                    <label>Product Code
-                        <input name="product_code" required>
-                    </label>
-                    <label>License Key
-                        <input name="license_key" required>
-                    </label>
-                    <label>Instance ID
-                        <input name="instance_id" required>
-                    </label>
-                    <label>Domain
-                        <input name="domain" placeholder="client.com">
-                    </label>
-                    <label>User Agent
-                        <input name="user_agent" placeholder="woocommerce/8.0">
-                    </label>
-                    <div class="actions">
-                        <button type="button" data-action="activate">Activate</button>
-                        <button type="button" data-action="deactivate" class="ghost">Deactivate</button>
-                    </div>
-                </form>
-            </article>
-        </section>
-
-        <section class="log-card">
-            <div class="card-head">
-                <h2>API Console</h2>
-                <p>Request/response history to keep tabs on what happened.</p>
-            </div>
-            <div id="log"></div>
-        </section>
-    </main>
-
-    <template id="logEntry">
-        <div class="entry">
-            <div class="entry-head">
-                <span class="pill"></span>
-                <strong class="label"></strong>
-                <span class="time"></span>
-            </div>
-            <div class="entry-body"></div>
         </div>
-    </template>
+        <div class="session-card">
+            <p class="eyebrow">Session</p>
+            <h2 id="sessionState">Checking session…</h2>
+            <p class="muted" id="sessionMeta">Attempting to load your admin profile.</p>
+            <div class="session-actions">
+                <button type="button" class="ghost" id="sessionRefresh">Refresh</button>
+                <button type="button" id="sessionLogout">Sign Out</button>
+            </div>
+        </div>
+    </header>
 
-    <script src="app.js" defer></script>
+    <section class="card list-card">
+        <div class="list-head">
+            <div>
+                <p class="eyebrow">Inventory</p>
+                <h3>Licenses</h3>
+                <p class="muted"><span id="licenseCount">0</span> records</p>
+            </div>
+            <div class="filters">
+                <input type="search" id="licenseSearch" placeholder="Search license, product, or note">
+                <select id="licenseStatus">
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="revoked">Revoked</option>
+                </select>
+                <button type="button" class="ghost" id="licenseRefresh">Reload</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table class="license-table">
+                <thead>
+                <tr>
+                    <th>License</th>
+                    <th>Product</th>
+                    <th>Status</th>
+                    <th>Expires</th>
+                    <th>Usage</th>
+                </tr>
+                </thead>
+                <tbody id="licenseTableBody"></tbody>
+            </table>
+            <div class="empty-state hidden" id="licenseEmpty">
+                <p>No licenses match your filters yet.</p>
+                <button type="button" id="clearFilters" class="ghost">Reset filters</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="card detail-card">
+        <header>
+            <p class="eyebrow">Details</p>
+            <h3 id="detailKey">Pick a license</h3>
+            <p class="muted" id="detailProduct">Nothing selected</p>
+        </header>
+        <dl class="detail-grid">
+            <div>
+                <dt>Status</dt>
+                <dd id="detailStatus">—</dd>
+            </div>
+            <div>
+                <dt>Expires</dt>
+                <dd id="detailExpires">—</dd>
+            </div>
+            <div>
+                <dt>Issued</dt>
+                <dd id="detailCreated">—</dd>
+            </div>
+            <div>
+                <dt>Updated</dt>
+                <dd id="detailUpdated">—</dd>
+            </div>
+            <div>
+                <dt>Usage</dt>
+                <dd id="detailUsage">—</dd>
+            </div>
+            <div>
+                <dt>Remaining</dt>
+                <dd id="detailRemaining">—</dd>
+            </div>
+        </dl>
+        <div class="detail-notes">
+            <h4>Notes</h4>
+            <p id="detailNotes">—</p>
+        </div>
+    </section>
+</main>
+
+<template id="licenseRow">
+    <tr>
+        <td>
+            <strong class="license-key"></strong>
+            <div class="muted subline"></div>
+        </td>
+        <td class="product-code"></td>
+        <td><span class="status-pill"></span></td>
+        <td class="expires"></td>
+        <td class="usage"></td>
+    </tr>
+</template>
+
+<script src="app.js" defer></script>
 </body>
 </html>
