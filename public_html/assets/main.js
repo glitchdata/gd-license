@@ -1,18 +1,24 @@
+tokenInput.addEventListener('input', () => {
 const baseInput = document.querySelector('#baseUrl');
-const tokenInput = document.querySelector('#adminToken');
 const defaultProductInput = document.querySelector('#defaultProduct');
 const issueForm = document.querySelector('#issueForm');
 const validateForm = document.querySelector('#validateForm');
 const activateForm = document.querySelector('#activateForm');
+const loginForm = document.querySelector('#adminLoginForm');
+const sessionStateEl = document.querySelector('#sessionState');
+const sessionActionsEl = document.querySelector('#sessionActions');
+const sessionLogout = document.querySelector('#sessionLogout');
+const sessionRefresh = document.querySelector('#sessionRefresh');
 const logContainer = document.querySelector('#log');
 const template = document.querySelector('#logEntry');
 
 const STORAGE_KEY = 'gd-license-portal';
 const state = {
     baseUrl: '/api/licenses',
-    adminToken: '',
     defaultProduct: '',
 };
+
+let sessionProfile = null;
 
 try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -22,7 +28,6 @@ try {
 }
 
 baseInput.value = state.baseUrl;
-if (state.adminToken) tokenInput.value = state.adminToken;
 if (state.defaultProduct) defaultProductInput.value = state.defaultProduct;
 
 defaultProductInput.addEventListener('input', () => {
@@ -33,11 +38,6 @@ defaultProductInput.addEventListener('input', () => {
 
 baseInput.addEventListener('input', () => {
     state.baseUrl = baseInput.value.trim() || '/api/licenses';
-    persist();
-});
-
-tokenInput.addEventListener('input', () => {
-    state.adminToken = tokenInput.value;
     persist();
 });
 
@@ -58,6 +58,38 @@ function applyDefaultProduct() {
 
 applyDefaultProduct();
 
+loginForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const payload = formToJSON(loginForm);
+    try {
+        await userApi('/login', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        await refreshSession();
+        loginForm.reset();
+        toast('Signed in.');
+    } catch (error) {
+        toast(error.message || 'Login failed', 'error');
+    }
+});
+
+sessionLogout?.addEventListener('click', async () => {
+    try {
+        await userApi('/logout', { method: 'POST' });
+    } catch (error) {
+        console.warn(error);
+    }
+    sessionProfile = null;
+    updateSessionUI();
+    toast('Signed out.');
+});
+
+sessionRefresh?.addEventListener('click', async () => {
+    await refreshSession();
+    toast('Session refreshed.');
+});
+
 issueForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const payload = withDefaults(formToJSON(issueForm));
@@ -74,7 +106,7 @@ activateForm?.querySelectorAll('button[data-action]')?.forEach((button) => {
     button.addEventListener('click', async () => {
         const action = button.dataset.action;
         const payload = withDefaults(formToJSON(activateForm));
-        await callApi(action, payload);
+        await callApi(action, payload, true);
     });
 });
 
@@ -85,30 +117,68 @@ function withDefaults(payload) {
     return payload;
 }
 
-async function callApi(action, payload, needsToken = false) {
+async function ensureAdminSession() {
+    if (sessionProfile?.is_admin) {
+        return true;
+    }
+    try {
+        await refreshSession();
+    } catch (error) {
+        return false;
+    }
+    return !!sessionProfile?.is_admin;
+}
+
+async function refreshSession() {
+    try {
+        const data = await userApi('/me');
+        if (!data?.profile?.is_admin) {
+            throw new Error('Admin privileges required.');
+        }
+        sessionProfile = data.profile;
+        updateSessionUI();
+        return sessionProfile;
+    } catch (error) {
+        sessionProfile = null;
+        updateSessionUI(error.message);
+        throw error;
+    }
+}
+
+function updateSessionUI(message) {
+    if (sessionProfile?.full_name) {
+        sessionStateEl.textContent = `Signed in as ${sessionProfile.full_name}`;
+        sessionActionsEl.classList.remove('hidden');
+        loginForm?.classList.add('hidden');
+    } else {
+        sessionStateEl.textContent = message || 'Not signed in';
+        sessionActionsEl.classList.add('hidden');
+        loginForm?.classList.remove('hidden');
+    }
+}
+
+async function callApi(action, payload, needsAdmin = false) {
     const entry = createLogEntry(action, payload);
     const baseUrl = (state.baseUrl || '/api/licenses').replace(/\/$/, '');
     const url = `${baseUrl}/${action}`;
 
-    const headers = {
-        'Content-Type': 'application/json',
-    };
-
-    if (needsToken) {
-        if (!state.adminToken) {
+    if (needsAdmin) {
+        const ok = await ensureAdminSession();
+        if (!ok) {
             entry.classList.add('error');
-            entry.querySelector('.entry-body').textContent = 'Admin token required.';
-            toast('Admin token required.', 'error');
+            entry.querySelector('.entry-body').textContent = 'Admin login required.';
+            entry.querySelector('.pill').style.background = 'var(--danger)';
+            toast('Admin login required.', 'error');
             return;
         }
-        headers['Authorization'] = `Bearer ${state.adminToken}`;
     }
 
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
+            credentials: 'include',
         });
 
         const body = await response.json();
@@ -155,11 +225,30 @@ function toast(message, type = 'info') {
     setTimeout(() => note.remove(), 3400);
 }
 
+async function userApi(path, options = {}) {
+    const response = await fetch(`/api/users${path}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        credentials: 'include',
+        ...options,
+    });
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.error) {
+        throw new Error(payload.error || 'Request failed');
+    }
+    return payload.data;
+}
+
 const SAMPLE_MAP = {
-    issue: (base, token) => `curl -X POST "${base}/issue" \\\n  -H "Authorization: Bearer ${token || '$TOKEN'}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"product_code":"APP_PRO"}'`,
-    activate: (base) => `curl -X POST "${base}/activate" \\\n  -H "Content-Type: application/json" \\\n  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
-    validate: (base) => `curl -X POST "${base}/validate" \\\n  -H "Content-Type: application/json" \\\n  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO"}'`,
-    deactivate: (base) => `curl -X POST "${base}/deactivate" \\\n  -H "Content-Type: application/json" \\\n  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
+    issue: (base) => `# Login first and store cookies: curl -c cookie.txt -X POST https://example.com/api/users/login \\\n+#   -H "Content-Type: application/json" -d '{"email":"","password":""}'\ncurl -X POST "${base}/issue" \\\n+  -H "Content-Type: application/json" \\\n+  -b cookie.txt \\\n+  -d '{"product_code":"APP_PRO"}'`,
+    activate: (base) => `curl -X POST "${base}/activate" \\\n+  -H "Content-Type: application/json" \\\n+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
+    validate: (base) => `curl -X POST "${base}/validate" \\\n+  -H "Content-Type: application/json" \\\n+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO"}'`,
+    deactivate: (base) => `curl -X POST "${base}/deactivate" \\\n+  -H "Content-Type: application/json" \\\n+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
 };
 
 document.querySelectorAll('.doc-card button.copy').forEach((button) => {
@@ -167,10 +256,11 @@ document.querySelectorAll('.doc-card button.copy').forEach((button) => {
         const parent = button.closest('.doc-card');
         const key = parent?.dataset.sample;
         const base = (state.baseUrl || '/api/licenses').replace(/\/$/, '');
-        const token = state.adminToken || '$TOKEN';
         const builder = SAMPLE_MAP[key];
-        const text = builder ? builder(base, token) : parent.querySelector('pre')?.innerText;
+        const text = builder ? builder(base) : parent.querySelector('pre')?.innerText;
         if (!text) return;
         navigator.clipboard.writeText(text).then(() => toast('Sample copied.')).catch(() => toast('Copy failed', 'error'));
     });
 });
+
+refreshSession().catch(() => updateSessionUI());

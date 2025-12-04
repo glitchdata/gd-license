@@ -62,6 +62,7 @@ VALUES ('PLUGIN_X', 'Plugin X', 5, NOW(), NOW());
 Two additional tables power credentialed access:
 
 - `users`: stores email, full name, bcrypt `password_hash`, timestamps, and `last_login_at`.
+- `users.is_admin`: flag granting access to the admin/portal tools and protected license endpoints.
 - `user_licenses`: associates users with `licenses` (many-to-many) with `assigned_at` metadata.
 
 Assigning a license is as simple as inserting a row into `user_licenses` with the relevant IDs.
@@ -174,9 +175,9 @@ Keep the portal behind an authentication layer (SiteGround password protection o
 ## Admin GUI
 The `/admin/` directory hosts a lightweight operator console for issuing, validating, and simulating activations without touching curl.
 
-- The GUI is static HTML/CSS/JS; it talks directly to `/api/licenses/*` using the values you supply for base URL and bearer token.
-- The admin token is stored in `localStorage` only on the device where you load the page. Clear storage if the workstation is shared.
-- Restrict access: place the `/admin/` path behind HTTP auth, an allow-listed IP, or SiteGround password protection. Anyone with browser access and the token can mint licenses.
+- The GUI is static HTML/CSS/JS and now relies on an authenticated admin session (accounts with `is_admin=1`).
+- The bearer token can still be used as a fallback for scripted calls, but the UI expects admins to authenticate via `/api/users/login` first.
+- Restrict access: place the `/admin/` path behind HTTP auth, an allow-listed IP, or SiteGround password protection; only logged-in admins can hit issue/activate/deactivate endpoints.
 - Forms cover issuance, validation, and activate/deactivate calls, and the console logs every request+response for quick debugging.
 
 ## User Portal (`/user/`)

@@ -291,6 +291,10 @@ code {
 
 .doc-card button.copy {
     align-self: flex-start;
+
+.hidden {
+    display: none !important;
+}
     padding: 0.5rem 1.2rem;
     font-size: 0.85rem;
     border-radius: 999px;

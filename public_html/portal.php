@@ -19,20 +19,37 @@
             <p class="lede">Authenticate with your admin token, issue new keys, simulate activations, and see exactly how to call the JSON API powering your products.</p>
             <ul class="callouts">
                 <li>All traffic targets <code>/api/licenses/*</code> over HTTPS.</li>
-                <li>Issuing licenses requires the bearer token defined in `LICENSE_ADMIN_TOKEN`.</li>
+                <li>Issue / activate / deactivate endpoints require an authenticated admin session.</li>
                 <li>Keep this console behind HTTP auth or an allow-listed VPN.</li>
                 <li>Customers sign in at <a href="/user/">/user/</a> with their email + password.</li>
             </ul>
         </div>
-        <div class="panel" id="authPanel">
-            <h2>Console Access</h2>
+        <div class="panel session-panel" id="authPanel">
+            <div class="session-header">
+                <div>
+                    <p class="eyebrow">Admin Session</p>
+                    <h2 id="sessionState">Not signed in</h2>
+                    <p class="muted">Issue / activate / deactivate endpoints require a logged-in admin.</p>
+                </div>
+                <div class="session-actions hidden" id="sessionActions">
+                    <button type="button" class="ghost" id="sessionRefresh">Refresh</button>
+                    <button type="button" id="sessionLogout">Logout</button>
+                </div>
+            </div>
+
+            <form id="adminLoginForm" class="stack">
+                <label>Email
+                    <input type="email" name="email" placeholder="you@glitchdata.com" autocomplete="email" required>
+                </label>
+                <label>Password
+                    <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+                </label>
+                <button type="submit">Sign In</button>
+            </form>
+
             <label>API Base URL
                 <input type="url" id="baseUrl" value="/api/licenses" autocomplete="off">
                 <small>E.g. <code>https://license.glitchdata.com/api/licenses</code></small>
-            </label>
-            <label>Admin Token
-                <input type="password" id="adminToken" placeholder="Bearer token" autocomplete="off">
-                <small>Stored locally in your browser only.</small>
             </label>
             <label>Preferred Product Code
                 <input type="text" id="defaultProduct" placeholder="APP_PRO" autocomplete="off">
@@ -138,14 +155,16 @@
                     <span class="pill issue"></span>
                     <strong>POST /api/licenses/issue</strong>
                 </header>
-                <p>Admin-only endpoint for creating keys. Requires `Authorization: Bearer {token}`.</p>
+                <p>Admin-only endpoint for creating keys. Requires a logged-in admin session (cookie).</p>
                 <ul>
                     <li>`product_code` (required)</li>
                     <li>`license_key`, `expires_at`, `max_activations`, `notes`, `status`</li>
                 </ul>
-                <pre><code>curl -X POST "$BASE/issue" \
-  -H "Authorization: Bearer $TOKEN" \
+                <pre><code># Login first: curl -c cookie.txt -X POST https://example.com/api/users/login \
+#   -H "Content-Type: application/json" -d '{"email":"","password":""}'
+curl -X POST "$BASE/issue" \
   -H "Content-Type: application/json" \
+  -b cookie.txt \
   -d '{"product_code":"APP_PRO"}'</code></pre>
                 <button type="button" class="copy">Copy Sample</button>
             </article>

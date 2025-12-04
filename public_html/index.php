@@ -59,6 +59,15 @@ function handleLicenseAction(LicenseService $service, string $action, array $pay
 {
     $ip = $_SERVER['REMOTE_ADDR'] ?? null;
 
+    if (!in_array($action, ['issue', 'activate', 'deactivate', 'validate'], true)) {
+        throw new RuntimeException('Unknown license route.');
+    }
+
+    if ($action !== 'validate') {
+        $userId = requireAuthenticatedUser(true);
+        requireAdmin($userId);
+    }
+
     return match ($action) {
         'issue' => handleIssue($service, $payload, $config),
         'activate' => $service->activate($payload, $ip),
@@ -81,12 +90,6 @@ function handleUserAction(UserService $service, string $action, string $method):
 
 function handleIssue(LicenseService $service, array $payload, array $config): array
 {
-    $token = getBearerToken();
-    $expected = $config['api']['admin_token'] ?? '';
-    if ($expected === '' || $token !== $expected) {
-        throw new RuntimeException('Unauthorized.');
-    }
-
     return $service->issueLicense($payload);
 }
 
@@ -196,13 +199,30 @@ function ensureSession(): void
     }
 }
 
-function requireAuthenticatedUser(): int
+function requireAuthenticatedUser(bool $throw = false): int
 {
     if (!isset($_SESSION['user_id'])) {
+        if ($throw) {
+            throw new RuntimeException('Authentication required.');
+        }
         respond(401, ['error' => 'Authentication required.']);
     }
 
     return (int) $_SESSION['user_id'];
+}
+
+function requireAdmin(int $userId): void
+{
+    static $cache;
+    if ($cache === null) {
+        global $userService;
+        $profile = $userService->profile($userId);
+        $cache = (bool) ($profile['is_admin'] ?? false);
+    }
+
+    if (!$cache) {
+        throw new RuntimeException('Admin privileges required.');
+    }
 }
 
 function readJsonPayload(): array

@@ -92,6 +92,7 @@ class UserService
             'id' => (int) $user['id'],
             'email' => $user['email'],
             'full_name' => $user['full_name'],
+            'is_admin' => (bool) $user['is_admin'],
             'created_at' => $user['created_at'],
             'updated_at' => $user['updated_at'],
             'last_login_at' => $user['last_login_at'],

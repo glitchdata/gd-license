@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(190) NOT NULL UNIQUE,
     full_name VARCHAR(190) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    is_admin TINYINT(1) NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
     last_login_at DATETIME DEFAULT NULL
@@ -63,8 +64,8 @@ VALUES ('APP_PRO', 'Example Product', 3, NOW(), NOW())
 ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at);
 
 -- Optional starter user with password `Passw0rd!`
-INSERT INTO users (email, full_name, password_hash, created_at, updated_at)
-VALUES ('demo@glitchdata.com', 'Demo User', '$2y$12$.vR9eJNcT.IvO.4/rREXFekCxpbaF/nBrDdsFHF7kHMV1RTjEOhpa', NOW(), NOW())
+INSERT INTO users (email, full_name, password_hash, is_admin, created_at, updated_at)
+VALUES ('demo@glitchdata.com', 'Demo User', '$2y$12$.vR9eJNcT.IvO.4/rREXFekCxpbaF/nBrDdsFHF7kHMV1RTjEOhpa', 1, NOW(), NOW())
 ON DUPLICATE KEY UPDATE updated_at = VALUES(updated_at);
 
 -- Assign sample license to demo user if both exist
