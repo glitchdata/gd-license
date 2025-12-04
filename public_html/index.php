@@ -6,6 +6,13 @@ use LicenseServer\LicenseService;
 use RuntimeException;
 use Throwable;
 
+$path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '', '/');
+$segments = $path === '' ? [] : explode('/', $path);
+
+if (($segments[0] ?? '') !== 'api') {
+    servePortal();
+}
+
 [$config, $database, $service] = require __DIR__ . '/../src/bootstrap.php';
 
 $allowedOrigins = $config['security']['allowed_origins'] ?? '*';
@@ -19,10 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '', '/');
-$segments = $path === '' ? [] : explode('/', $path);
-
-if (($segments[0] ?? '') !== 'api' || ($segments[1] ?? '') !== 'licenses') {
+if (($segments[1] ?? '') !== 'licenses') {
     respond(404, ['error' => 'Route not found.']);
 }
 
@@ -91,6 +95,22 @@ function getBearerToken(): ?string
     }
 
     return null;
+}
+
+function servePortal(): void
+{
+    $portal = __DIR__ . '/portal.php';
+    if (!is_file($portal)) {
+        http_response_code(200);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'GD License Server is online.';
+        exit;
+    }
+
+    http_response_code(200);
+    header('Content-Type: text/html; charset=utf-8');
+    readfile($portal);
+    exit;
 }
 
 function respond(int $status, array $payload): void

@@ -1,0 +1,334 @@
+:root {
+    color-scheme: dark;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    --bg: #04050b;
+    --bg-glow: radial-gradient(circle at 15% 20%, rgba(255, 214, 0, 0.25), transparent 60%),
+                radial-gradient(circle at 85% 10%, rgba(0, 173, 255, 0.25), transparent 55%),
+                #04050b;
+    --card: rgba(5, 7, 15, 0.92);
+    --border: rgba(255, 255, 255, 0.12);
+    --muted: rgba(244, 247, 255, 0.7);
+    --accent: #fcee0a;
+    --accent-2: #5ef0ff;
+    --danger: #ff6f91;
+    --text: #f5f7ff;
+    --shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+.bg {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-glow);
+    z-index: -1;
+    filter: blur(10px);
+    opacity: 0.9;
+}
+
+.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem clamp(1.5rem, 4vw, 3.5rem) 4rem;
+}
+
+.masthead {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 3rem;
+    align-items: start;
+}
+
+.eyebrow {
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+h1 {
+    margin: 0.6rem 0 1rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    letter-spacing: -0.02em;
+}
+
+.lede {
+    max-width: 520px;
+    font-size: 1.1rem;
+    color: var(--muted);
+}
+
+.callouts {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0;
+    color: var(--muted);
+}
+
+.callouts li {
+    margin-bottom: 0.4rem;
+}
+
+.panel {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 1.8rem;
+    background: var(--card);
+    box-shadow: var(--shadow);
+}
+
+.panel h2 {
+    margin-top: 0;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+}
+
+input,
+textarea,
+button {
+    font: inherit;
+}
+
+input,
+textarea {
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.75rem 1rem;
+    color: var(--text);
+}
+
+input:focus,
+textarea:focus {
+    outline: 2px solid rgba(94, 240, 255, 0.4);
+}
+
+small {
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.8rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 1.8rem;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-head h3 {
+    margin: 0;
+}
+
+.card-head p {
+    margin: 0.3rem 0 1.2rem;
+    color: var(--muted);
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.button-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.button-row.split {
+    justify-content: space-between;
+}
+
+button {
+    border: none;
+    border-radius: 999px;
+    padding: 0.85rem 1.8rem;
+    cursor: pointer;
+    background: linear-gradient(125deg, var(--accent), var(--accent-2));
+    color: #05050a;
+    font-weight: 600;
+    box-shadow: 0 15px 25px rgba(94, 240, 255, 0.3);
+    transition: transform 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+button.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none;
+}
+
+.log {
+    margin-bottom: 2.5rem;
+}
+
+#log {
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1rem;
+}
+
+.entry {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 1rem 1.2rem;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.entry-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+}
+
+.entry .pill {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.entry.error .pill {
+    background: var(--danger);
+}
+
+.entry-body {
+    font-family: 'SFMono-Regular', 'Consolas', monaco, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    white-space: pre-wrap;
+}
+
+.api-docs .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+}
+
+.doc-card {
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 1.4rem;
+    background: rgba(6, 7, 15, 0.9);
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.doc-card header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.doc-card .pill {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.doc-card .pill.activate { background: #6effa5; }
+.doc-card .pill.validate { background: #5ef0ff; }
+.doc-card .pill.deactivate { background: #ffb347; }
+
+pre {
+    margin: 0;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 16px;
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    overflow-x: auto;
+}
+
+code {
+    font-family: 'SFMono-Regular', 'Consolas', monaco, monospace;
+}
+
+.doc-card button.copy {
+    align-self: flex-start;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    border-radius: 999px;
+}
+
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: rgba(5, 5, 10, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    padding: 0.85rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease, fadeOut 0.4s ease 3s forwards;
+}
+
+.toast.error {
+    border-color: rgba(255, 111, 145, 0.6);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+@media (max-width: 700px) {
+    .button-row {
+        flex-direction: column;
+    }
+
+    .button-row.split {
+        flex-direction: column;
+    }
+}

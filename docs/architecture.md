@@ -9,7 +9,7 @@
 ## Technology Stack
 - PHP 8.1+ using PDO for MySQL access (compatible with SiteGround's managed PHP builds).
 - MySQL 5.7/8.0 with InnoDB tables and timezone-safe timestamps.
-- Single public entry point (`public_html/index.php`) plus a static operator GUI in `public_html/admin/` for manual issuance/testing.
+- Single public entry point (`public_html/index.php`) that doubles as the landing portal (HTML) and serves API traffic, plus a static operator GUI in `public_html/admin/` for manual issuance/testing.
 - Environment-driven configuration via `config/config.php` that reads SiteGround "PHP Variables" or `.env` values.
 
 ## Database Schema (summary)
