@@ -42,7 +42,7 @@
                 </div>
             </div>
 
-            <form id="adminLoginForm" class="stack">
+            <form id="adminLoginForm" class="stack" method="post">
                 <label>Email
                     <input type="email" name="email" placeholder="you@glitchdata.com" autocomplete="email" required>
                 </label>
