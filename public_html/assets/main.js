@@ -83,6 +83,7 @@ loginForm?.addEventListener('submit', async (event) => {
         await refreshSession();
         loginForm.reset();
         toast('Signed in.');
+        window.location.assign('/admin/');
     } catch (error) {
         toast(error.message || 'Login failed', 'error');
     }
