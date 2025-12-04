@@ -15,11 +15,16 @@
     <header class="masthead">
         <div>
             <p class="eyebrow">Glitchdata · License Ops</p>
-            <h1>License control that feels intentional.</h1>
-            <p class="lede">Authenticate with your admin token, issue new keys, simulate activations, and see exactly how to call the JSON API powering your products.</p>
+            <h1>Log into the control room.</h1>
+            <p class="lede">Sign in with your admin credentials right on the front page, then issue licenses, simulate activations, and inspect the JSON API responses without leaving this view.</p>
+            <div class="cta-row">
+                <a class="cta" href="#authPanel">Go to Admin Login</a>
+                <a class="cta ghost" href="/user/">Customer Portal</a>
+            </div>
             <ul class="callouts">
-                <li>All traffic targets <code>/api/licenses/*</code> over HTTPS.</li>
+                <li>Admins sign in with email + password using the panel on the right.</li>
                 <li>Issue / activate / deactivate endpoints require an authenticated admin session.</li>
+                <li>All traffic targets <code>/api/licenses/*</code> over HTTPS.</li>
                 <li>Keep this console behind HTTP auth or an allow-listed VPN.</li>
                 <li>Customers sign in at <a href="/user/">/user/</a> with their email + password.</li>
             </ul>

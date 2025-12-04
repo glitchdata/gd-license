@@ -1,4 +1,3 @@
-tokenInput.addEventListener('input', () => {
 const baseInput = document.querySelector('#baseUrl');
 const defaultProductInput = document.querySelector('#defaultProduct');
 const issueForm = document.querySelector('#issueForm');
@@ -27,16 +26,18 @@ try {
     console.warn('Unable to parse saved state', error);
 }
 
-baseInput.value = state.baseUrl;
-if (state.defaultProduct) defaultProductInput.value = state.defaultProduct;
+if (baseInput) baseInput.value = state.baseUrl;
+if (state.defaultProduct && defaultProductInput) {
+    defaultProductInput.value = state.defaultProduct;
+}
 
-defaultProductInput.addEventListener('input', () => {
+defaultProductInput?.addEventListener('input', () => {
     state.defaultProduct = defaultProductInput.value.trim();
     persist();
     applyDefaultProduct();
 });
 
-baseInput.addEventListener('input', () => {
+baseInput?.addEventListener('input', () => {
     state.baseUrl = baseInput.value.trim() || '/api/licenses';
     persist();
 });
@@ -64,7 +65,7 @@ loginForm?.addEventListener('submit', async (event) => {
     try {
         await userApi('/login', {
             method: 'POST',
-            body: JSON.stringify(payload),
+            body: payload,
         });
         await refreshSession();
         loginForm.reset();
@@ -226,12 +227,22 @@ function toast(message, type = 'info') {
 }
 
 async function userApi(path, options = {}) {
-    const response = await fetch(`/api/users${path}`, {
+    const { headers: optionHeaders = {}, body, ...rest } = options;
+    const config = {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        headers: {
+            'Content-Type': 'application/json',
+            ...optionHeaders,
+        },
         credentials: 'include',
-        ...options,
-    });
+        ...rest,
+    };
+
+    if (body !== undefined) {
+        config.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(`/api/users${path}`, config);
 
     if (response.status === 204) {
         return null;
@@ -245,10 +256,22 @@ async function userApi(path, options = {}) {
 }
 
 const SAMPLE_MAP = {
-    issue: (base) => `# Login first and store cookies: curl -c cookie.txt -X POST https://example.com/api/users/login \\\n+#   -H "Content-Type: application/json" -d '{"email":"","password":""}'\ncurl -X POST "${base}/issue" \\\n+  -H "Content-Type: application/json" \\\n+  -b cookie.txt \\\n+  -d '{"product_code":"APP_PRO"}'`,
-    activate: (base) => `curl -X POST "${base}/activate" \\\n+  -H "Content-Type: application/json" \\\n+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
-    validate: (base) => `curl -X POST "${base}/validate" \\\n+  -H "Content-Type: application/json" \\\n+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO"}'`,
-    deactivate: (base) => `curl -X POST "${base}/deactivate" \\\n+  -H "Content-Type: application/json" \\\n+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
+    issue: (base) => `# Login first and store cookies:
+# curl -c cookie.txt -X POST https://example.com/api/users/login \
+#   -H "Content-Type: application/json" -d '{"email":"","password":""}'
+curl -X POST "${base}/issue" \
+  -H "Content-Type: application/json" \
+  -b cookie.txt \
+  -d '{"product_code":"APP_PRO"}'`,
+    activate: (base) => `curl -X POST "${base}/activate" \
+  -H "Content-Type: application/json" \
+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
+    validate: (base) => `curl -X POST "${base}/validate" \
+  -H "Content-Type: application/json" \
+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO"}'`,
+    deactivate: (base) => `curl -X POST "${base}/deactivate" \
+  -H "Content-Type: application/json" \
+  -d '{"license_key":"XXXX-XXXX","product_code":"APP_PRO","instance_id":"site-123"}'`,
 };
 
 document.querySelectorAll('.doc-card button.copy').forEach((button) => {
@@ -259,7 +282,9 @@ document.querySelectorAll('.doc-card button.copy').forEach((button) => {
         const builder = SAMPLE_MAP[key];
         const text = builder ? builder(base) : parent.querySelector('pre')?.innerText;
         if (!text) return;
-        navigator.clipboard.writeText(text).then(() => toast('Sample copied.')).catch(() => toast('Copy failed', 'error'));
+        navigator.clipboard.writeText(text)
+            .then(() => toast('Sample copied.'))
+            .catch(() => toast('Copy failed', 'error'));
     });
 });
 

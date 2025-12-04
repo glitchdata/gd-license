@@ -26,6 +26,10 @@ body {
     min-height: 100vh;
 }
 
+.hidden {
+    display: none !important;
+}
+
 .bg {
     position: fixed;
     inset: 0;
@@ -66,6 +70,38 @@ h1 {
     max-width: 520px;
     font-size: 1.1rem;
     color: var(--muted);
+}
+
+.cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+a.cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.85rem 1.8rem;
+    text-decoration: none;
+    font-weight: 600;
+    background: linear-gradient(125deg, var(--accent), var(--accent-2));
+    color: #05050a;
+    box-shadow: 0 15px 25px rgba(94, 240, 255, 0.3);
+    transition: transform 0.2s ease;
+}
+
+a.cta:hover {
+    transform: translateY(-2px);
+}
+
+a.cta.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none;
 }
 
 .callouts {
@@ -291,10 +327,6 @@ code {
 
 .doc-card button.copy {
     align-self: flex-start;
-
-.hidden {
-    display: none !important;
-}
     padding: 0.5rem 1.2rem;
     font-size: 0.85rem;
     border-radius: 999px;
