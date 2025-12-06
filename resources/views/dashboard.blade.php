@@ -19,9 +19,12 @@
     <section class="card" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
         <div>
             <p class="eyebrow" style="margin-bottom:0.35rem;">Admin tools</p>
-            <h2 style="margin:0;">Manage organization licenses</h2>
+            <h2 style="margin:0;">Control users & licenses</h2>
         </div>
-        <a class="link" style="font-weight:600;" href="{{ route('admin.licenses.index') }}">Open license console →</a>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <a class="link" style="font-weight:600;" href="{{ route('admin.users.index') }}">Manage users →</a>
+            <a class="link" style="font-weight:600;" href="{{ route('admin.licenses.index') }}">Manage licenses →</a>
+        </div>
     </section>
 @endif
 

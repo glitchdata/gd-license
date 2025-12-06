@@ -10,7 +10,8 @@
         <p class="lead">Review, edit, and retire license allocations across the organization.</p>
     </div>
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-        <a class="link" href="{{ route('dashboard') }}">Back to dashboard</a>
+        <a class="link" href="{{ route('dashboard') }}">Dashboard</a>
+        <a class="link" href="{{ route('admin.users.index') }}">Users</a>
         <a href="{{ route('admin.licenses.create') }}" class="link" style="font-weight:600;">+ New license</a>
     </div>
 </header>
