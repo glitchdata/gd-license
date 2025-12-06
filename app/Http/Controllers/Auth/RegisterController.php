@@ -19,7 +19,9 @@ class RegisterController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        return view('auth.register', [
+            'captchaQuestion' => $this->captchaChallenge(),
+        ]);
     }
 
     /**
@@ -31,7 +33,21 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Password::defaults()],
+            'captcha' => ['required', function ($attribute, $value, $fail) {
+                $expected = session('captcha.answer');
+
+                if ($expected === null) {
+                    $fail('Captcha session expired. Please try again.');
+                    return;
+                }
+
+                if ((int) $value !== (int) $expected) {
+                    $fail('Captcha answer is incorrect.');
+                }
+            }],
         ]);
+
+        session()->forget(['captcha.answer', 'captcha.challenge']);
 
         $user = User::create([
             'name' => $validated['name'],
@@ -44,5 +60,24 @@ class RegisterController extends Controller
         Auth::login($user);
 
         return redirect()->route('dashboard')->with('status', 'Account created. Welcome aboard!');
+    }
+
+    private function captchaChallenge(): string
+    {
+        $existing = session('captcha.challenge');
+        if ($existing) {
+            return $existing;
+        }
+
+        $a = random_int(1, 9);
+        $b = random_int(1, 9);
+        $question = $a.' + '.$b;
+
+        session([
+            'captcha.challenge' => $question,
+            'captcha.answer' => $a + $b,
+        ]);
+
+        return $question;
     }
 }
