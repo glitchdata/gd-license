@@ -71,7 +71,12 @@
             <tbody>
                 @forelse ($licenses as $license)
                     <tr style="background:var(--bg);">
-                        <td style="padding:0.9rem 0.75rem;font-weight:600;color:var(--text);">{{ $license->product->name ?? '—' }}</td>
+                        <td style="padding:0.9rem 0.75rem;font-weight:600;color:var(--text);">
+                            <a href="{{ route('licenses.show', $license) }}" style="color:inherit;text-decoration:none;display:flex;flex-direction:column;gap:0.2rem;">
+                                <span>{{ $license->product->name ?? '—' }}</span>
+                                <span style="font-size:0.8rem;color:var(--muted);">View details →</span>
+                            </a>
+                        </td>
                         <td style="padding:0.9rem 0.75rem;font-family:monospace;">{{ $license->product->product_code ?? '—' }}</td>
                         <td style="padding:0.9rem 0.75rem;">{{ $license->seats_used }} / {{ $license->seats_total }}</td>
                         <td style="padding:0.9rem 0.75rem;color:{{ $license->seats_available > 0 ? 'var(--success)' : 'var(--error)' }};">
