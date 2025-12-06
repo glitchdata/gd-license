@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\LicenseController as AdminLicenseController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
@@ -22,3 +23,11 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware('auth')
     ->name('dashboard');
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', 'admin'])
+    ->group(function () {
+        Route::redirect('/', '/admin/licenses')->name('home');
+        Route::resource('licenses', AdminLicenseController::class)->except(['show']);
+    });

@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Demo User',
             'email' => 'demo@example.com',
             'password' => bcrypt('password'),
+            'is_admin' => true,
         ]);
 
         License::query()->insert([

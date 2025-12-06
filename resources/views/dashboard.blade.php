@@ -15,6 +15,16 @@
     </form>
 </header>
 
+@if ($user->is_admin)
+    <section class="card" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div>
+            <p class="eyebrow" style="margin-bottom:0.35rem;">Admin tools</p>
+            <h2 style="margin:0;">Manage organization licenses</h2>
+        </div>
+        <a class="link" style="font-weight:600;" href="{{ route('admin.licenses.index') }}">Open license console →</a>
+    </section>
+@endif
+
 <section class="card">
     <h2>Account details</h2>
     <dl class="details">
