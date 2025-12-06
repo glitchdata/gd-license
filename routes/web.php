@@ -11,7 +11,8 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\UserLicenseController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/shop');
+Route::view('/', 'home')->name('home');
+Route::view('/api-lab', 'api.lab')->name('api.lab');
 
 Route::get('/shop', ShopController::class)->name('shop');
 

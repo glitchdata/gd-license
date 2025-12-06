@@ -144,9 +144,11 @@
 <body>
     <div class="page">
         <nav class="site-nav">
-            <a href="{{ route('shop') }}" class="brand">Glitchdata</a>
+            <a href="{{ route('home') }}" class="brand">Glitchdata</a>
             <div class="nav-links">
+                <a href="{{ route('home') }}">Home</a>
                 <a href="{{ route('shop') }}">Shop</a>
+                <a href="{{ route('api.lab') }}">API Lab</a>
                 @auth
                     <a href="{{ route('dashboard') }}">Dashboard</a>
                 @else

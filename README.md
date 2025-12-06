@@ -9,6 +9,7 @@ A Laravel 11 application that delivers an email/password login portal with regis
 - Dashboard now highlights account details plus a license inventory table seeded with demo data.
 - Dashboard offers a self-serve purchase form with per-seat pricing, product-defined license durations, and a mock credit card checkout so users can add new licenses tied to their account in seconds.
 - Admin console for CRUD management of the product catalog, license seat allocations, optional user ownership assignments, and user onboarding/offboarding (all protected by an `is_admin` flag).
+- Public-facing homepage (`/`) spotlights the platform, links to the external shop (`/shop`), and surfaces an API Lab (`/api-lab`) so prospects can validate licenses without signing in.
 - Lightweight API endpoint for validating licenses by product code (`POST /api/licenses/validate`).
 - Admin tools include an in-browser tester for the validation API (`/admin/tools/license-validation`).
 - Eloquent-powered `users` table migrations and a seeded demo account (`demo@example.com` / `password`).
@@ -49,7 +50,7 @@ A Laravel 11 application that delivers an email/password login portal with regis
 	# Optional: npm run dev
 	```
 	The document root has been renamed to `public_html`, so point your web server (or `php -S` command) at that directory if you are not using `php artisan serve`.
-6. Open `http://127.0.0.1:8000/login` to exercise the flow.
+6. Open `http://127.0.0.1:8000/` to preview the marketing homepage, then continue to `/shop`, `/api-lab`, or `/login` as needed.
 
 ### Admin access
 
