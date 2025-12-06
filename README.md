@@ -9,6 +9,7 @@ A Laravel 11 application that delivers an email/password login portal with regis
 - Dashboard now highlights account details plus a license inventory table seeded with demo data.
 - Admin console for CRUD management of licenses (protected by an `is_admin` flag on users) plus user management for inviting, editing, or deprovisioning accounts.
 - Lightweight API endpoint for validating licenses by product code (`POST /api/licenses/validate`).
+- Admin tools include an in-browser tester for the validation API (`/admin/tools/license-validation`).
 - Eloquent-powered `users` table migrations and a seeded demo account (`demo@example.com` / `password`).
 - Blade layout + views that provide the polished UI without requiring a frontend build step (Tailwind/Vite can be added later).
 
@@ -53,6 +54,7 @@ A Laravel 11 application that delivers an email/password login portal with regis
 
 - The seeded `demo@example.com` user ships with `is_admin=true`, so it can reach `/admin/licenses`.
 - User admin lives at `/admin/users`, sharing the same `is_admin` guard.
+- API tester lives at `/admin/tools/license-validation` (admin-only) and fires requests straight to `/api/licenses/validate` for quick manual checks.
 - To promote another user, set `is_admin` to `1` in the `users` table or run a quick tinker command:
 	```bash
 	php artisan tinker --execute="App\\Models\\User::where('email','you@example.com')->update(['is_admin' => true]);"

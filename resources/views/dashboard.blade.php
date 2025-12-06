@@ -24,6 +24,7 @@
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <a class="link" style="font-weight:600;" href="{{ route('admin.users.index') }}">Manage users →</a>
             <a class="link" style="font-weight:600;" href="{{ route('admin.licenses.index') }}">Manage licenses →</a>
+            <a class="link" style="font-weight:600;" href="{{ route('admin.tools.license-validation') }}">Test API →</a>
         </div>
     </section>
 @endif
