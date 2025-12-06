@@ -11,6 +11,17 @@
             @endforeach
         </select>
     </label>
+    <label>
+        <span>Assigned user</span>
+        <select name="user_id" style="width:100%;border:1px solid rgba(15,23,42,0.15);border-radius:0.9rem;padding:0.85rem 1rem;font-size:1rem;">
+            <option value="" {{ old('user_id', $license->user_id ?? '') ? '' : 'selected' }}>Unassigned</option>
+            @foreach ($users as $user)
+                <option value="{{ $user->id }}" {{ (int) old('user_id', $license->user_id ?? '') === $user->id ? 'selected' : '' }}>
+                    {{ $user->name }} ({{ $user->email }})
+                </option>
+            @endforeach
+        </select>
+    </label>
     <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
         <label>
             <span>Total seats</span>

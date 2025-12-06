@@ -9,10 +9,11 @@ class License extends Model
 {
     use HasFactory;
 
-    protected $with = ['product'];
+    protected $with = ['product', 'user'];
 
     protected $fillable = [
         'product_id',
+        'user_id',
         'seats_total',
         'seats_used',
         'expires_at',
@@ -30,5 +31,10 @@ class License extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

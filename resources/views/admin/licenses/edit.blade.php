@@ -25,7 +25,7 @@
 <div class="card">
     <form method="POST" action="{{ route('admin.licenses.update', $license) }}">
         @method('PUT')
-        @include('admin.licenses._form', ['license' => $license, 'submitLabel' => 'Save changes', 'products' => $products])
+        @include('admin.licenses._form', ['license' => $license, 'submitLabel' => 'Save changes', 'products' => $products, 'users' => $users])
     </form>
 </div>
 @endsection

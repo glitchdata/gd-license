@@ -7,7 +7,7 @@ A Laravel 11 application that delivers an email/password login portal with regis
 - Guest-only routes for `/login` and `/register`, plus authenticated `/dashboard` (`web` guard) and `/logout` POST endpoint.
 - Controllers dedicated to login, registration, and dashboard rendering with session regeneration to prevent fixation.
 - Dashboard now highlights account details plus a license inventory table seeded with demo data.
-- Admin console for CRUD management of the product catalog, license seat allocations, and user onboarding/offboarding (all protected by an `is_admin` flag).
+- Admin console for CRUD management of the product catalog, license seat allocations, optional user ownership assignments, and user onboarding/offboarding (all protected by an `is_admin` flag).
 - Lightweight API endpoint for validating licenses by product code (`POST /api/licenses/validate`).
 - Admin tools include an in-browser tester for the validation API (`/admin/tools/license-validation`).
 - Eloquent-powered `users` table migrations and a seeded demo account (`demo@example.com` / `password`).

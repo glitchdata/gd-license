@@ -30,7 +30,7 @@
 
 <div class="card">
     <form method="POST" action="{{ route('admin.licenses.store') }}">
-        @include('admin.licenses._form', ['license' => new \App\Models\License(), 'submitLabel' => 'Create license', 'products' => $products])
+        @include('admin.licenses._form', ['license' => new \App\Models\License(), 'submitLabel' => 'Create license', 'products' => $products, 'users' => $users])
     </form>
 </div>
 @endsection
