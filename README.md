@@ -6,6 +6,7 @@ A Laravel 11 application that delivers an email/password login portal with regis
 
 - Guest-only routes for `/login` and `/register`, plus authenticated `/dashboard` (`web` guard) and `/logout` POST endpoint.
 - Controllers dedicated to login, registration, and dashboard rendering with session regeneration to prevent fixation.
+- Dashboard now highlights account details plus a license inventory table seeded with demo data.
 - Eloquent-powered `users` table migrations and a seeded demo account (`demo@example.com` / `password`).
 - Blade layout + views that provide the polished UI without requiring a frontend build step (Tailwind/Vite can be added later).
 
