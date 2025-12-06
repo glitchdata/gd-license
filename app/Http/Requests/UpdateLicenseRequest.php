@@ -19,6 +19,7 @@ class UpdateLicenseRequest extends FormRequest
             'seats_total' => ['required', 'integer', 'min:1'],
             'seats_used' => ['nullable', 'integer', 'min:0', 'lte:seats_total'],
             'expires_at' => ['nullable', 'date'],
+            'domains' => ['nullable', 'string'],
         ];
     }
 }

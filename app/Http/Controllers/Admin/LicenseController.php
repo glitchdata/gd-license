@@ -16,7 +16,7 @@ class LicenseController extends Controller
     public function index(): View
     {
         return view('admin.licenses.index', [
-            'licenses' => License::with(['product', 'user'])->latest()->paginate(10),
+            'licenses' => License::with(['product', 'user', 'domains'])->latest()->paginate(10),
         ]);
     }
 
@@ -30,7 +30,9 @@ class LicenseController extends Controller
 
     public function store(StoreLicenseRequest $request): RedirectResponse
     {
-        License::create($request->validated());
+        $payload = $request->safe()->except('domains');
+        $license = License::create($payload);
+        $this->syncDomains($license, $request->input('domains'));
 
         return redirect()
             ->route('admin.licenses.index')
@@ -40,7 +42,7 @@ class LicenseController extends Controller
     public function edit(License $license): View
     {
         return view('admin.licenses.edit', [
-            'license' => $license->load(['product', 'user']),
+            'license' => $license->load(['product', 'user', 'domains']),
             'products' => Product::orderBy('name')->get(),
             'users' => User::orderBy('name')->get(),
         ]);
@@ -48,7 +50,9 @@ class LicenseController extends Controller
 
     public function update(UpdateLicenseRequest $request, License $license): RedirectResponse
     {
-        $license->update($request->validated());
+        $payload = $request->safe()->except('domains');
+        $license->update($payload);
+        $this->syncDomains($license, $request->input('domains'));
 
         return redirect()
             ->route('admin.licenses.index')
@@ -62,5 +66,25 @@ class LicenseController extends Controller
         return redirect()
             ->route('admin.licenses.index')
             ->with('status', 'License removed.');
+    }
+
+    private function syncDomains(License $license, ?string $domainsInput): void
+    {
+        $domains = collect(preg_split('/[,\n]+/', (string) $domainsInput))
+            ->map(fn ($domain) => strtolower(trim($domain)))
+            ->filter()
+            ->unique()
+            ->take(50)
+            ->values();
+
+        $license->domains()->delete();
+
+        if ($domains->isEmpty()) {
+            return;
+        }
+
+        $license->domains()->createMany(
+            $domains->map(fn ($domain) => ['domain' => $domain])->all()
+        );
     }
 }

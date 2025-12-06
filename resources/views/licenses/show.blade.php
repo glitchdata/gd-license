@@ -65,6 +65,20 @@
             <dt>Assigned email</dt>
             <dd>{{ $license->user->email ?? auth()->user()->email }}</dd>
         </div>
+        <div style="grid-column:1 / -1;">
+            <dt>Allowed domains</dt>
+            <dd style="margin-top:0.5rem;">
+                @if ($license->domains->isEmpty())
+                    <span style="color:var(--muted);">No domain restrictions configured.</span>
+                @else
+                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+                        @foreach ($license->domains as $domain)
+                            <span style="background:rgba(15,23,42,0.08);border-radius:999px;padding:0.2rem 0.65rem;font-size:0.85rem;">{{ $domain->domain }}</span>
+                        @endforeach
+                    </div>
+                @endif
+            </dd>
+        </div>
     </dl>
 </section>
 

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\License;
+use App\Models\LicenseDomain;
 use App\Models\Product;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -62,15 +63,13 @@ class DatabaseSeeder extends Seeder
             ->get()
             ->keyBy('product_code');
 
-        License::query()->insert([
+        $licenses = [
             [
                 'product_id' => $productMap['LIC-ANL-01']->id,
                 'user_id' => $admin->id,
                 'seats_total' => 25,
                 'seats_used' => 18,
                 'expires_at' => now()->addMonths(6),
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'product_id' => $productMap['LIC-SEC-99']->id,
@@ -78,8 +77,6 @@ class DatabaseSeeder extends Seeder
                 'seats_total' => 50,
                 'seats_used' => 42,
                 'expires_at' => now()->addYear(),
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'product_id' => $productMap['LIC-DLK-12']->id,
@@ -87,9 +84,15 @@ class DatabaseSeeder extends Seeder
                 'seats_total' => 10,
                 'seats_used' => 4,
                 'expires_at' => now()->addMonths(3),
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
-        ]);
+        ];
+
+        foreach ($licenses as $data) {
+            $license = License::create($data);
+            LicenseDomain::create([
+                'license_id' => $license->id,
+                'domain' => 'example.com',
+            ]);
+        }
     }
 }

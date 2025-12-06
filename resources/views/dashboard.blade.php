@@ -96,6 +96,10 @@
                 <span>Seats needed</span>
                 <input type="number" name="seats_total" id="seats-input" min="1" value="{{ old('seats_total', 1) }}" required>
             </label>
+            <label>
+                <span>Primary domain (optional)</span>
+                <input type="text" name="domain" placeholder="acme.com" value="{{ old('domain') }}">
+            </label>
             <div style="padding:0.75rem 1rem;background:var(--bg);border-radius:0.75rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;">
                 <span>
                     Estimated total

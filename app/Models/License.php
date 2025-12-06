@@ -9,7 +9,7 @@ class License extends Model
 {
     use HasFactory;
 
-    protected $with = ['product', 'user'];
+    protected $with = ['product', 'user', 'domains'];
 
     protected $fillable = [
         'product_id',
@@ -22,6 +22,13 @@ class License extends Model
     protected $casts = [
         'expires_at' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (License $license) {
+            $license->domains()->delete();
+        });
+    }
 
     public function getSeatsAvailableAttribute(): int
     {
@@ -36,5 +43,10 @@ class License extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function domains()
+    {
+        return $this->hasMany(LicenseDomain::class);
     }
 }

@@ -59,6 +59,13 @@ class UserLicenseController extends Controller
             'expires_at' => now()->addMonths($duration),
         ]);
 
+        if ($domain = $data['domain'] ?? null) {
+            $normalized = strtolower(trim($domain));
+            if ($normalized !== '') {
+                $license->domains()->create(['domain' => $normalized]);
+            }
+        }
+
         return redirect()
             ->route('licenses.show', $license)
             ->with('status', 'License purchased successfully. Transaction '.$transactionId.' · Total $'.number_format($total, 2));

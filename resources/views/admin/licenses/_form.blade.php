@@ -1,4 +1,10 @@
 @csrf
+@php
+    $domainInput = old('domains');
+    if ($domainInput === null && isset($license)) {
+        $domainInput = $license->domains->pluck('domain')->implode(PHP_EOL);
+    }
+@endphp
 <div class="stack" style="display:grid;gap:1rem;">
     <label>
         <span>Product</span>
@@ -10,6 +16,11 @@
                 </option>
             @endforeach
         </select>
+    </label>
+    <label>
+        <span>Allowed domains</span>
+        <textarea name="domains" rows="3" style="width:100%;border:1px solid rgba(15,23,42,0.15);border-radius:0.9rem;padding:0.85rem 1rem;font-size:1rem;" placeholder="acme.com&#10;subsidiary.org">{{ $domainInput }}</textarea>
+        <small style="display:block;color:var(--muted);margin-top:0.35rem;">Enter one domain per line; leave blank for no restrictions.</small>
     </label>
     <label>
         <span>Assigned user</span>
