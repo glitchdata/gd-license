@@ -113,7 +113,7 @@ return [
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
     'two_factor' => [
-        'enabled' => env('LOGIN_TWO_FACTOR_ENABLED', true),
+        'enabled' => filter_var(env('LOGIN_TWO_FACTOR_ENABLED', true), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true,
     ],
 
 ];
