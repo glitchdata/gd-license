@@ -146,7 +146,7 @@
                 @forelse ($licenses as $license)
                     <tr style="background:var(--bg);">
                         <td style="padding:0.9rem 0.75rem;font-weight:600;color:var(--text);">
-                            <a href="{{ $license->inspect_uri }}" style="color:inherit;text-decoration:none;display:flex;flex-direction:column;gap:0.2rem;">
+                            <a href="{{ $license->inspect_uri }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;display:flex;flex-direction:column;gap:0.2rem;">
                                 <span>License #{{ $license->id }}</span>
                                 <span style="font-size:0.8rem;color:var(--muted);">View details →</span>
                             </a>
