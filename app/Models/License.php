@@ -25,6 +25,10 @@ class License extends Model
         'expires_at' => 'date',
     ];
 
+    protected $appends = [
+        'inspect_uri',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (License $license) {
@@ -56,6 +60,11 @@ class License extends Model
     public function domains()
     {
         return $this->hasMany(LicenseDomain::class);
+    }
+
+    public function getInspectUriAttribute(): string
+    {
+        return route('licenses.show', $this);
     }
 
     private static function generateIdentifier(): string

@@ -34,6 +34,10 @@
             <dd style="font-family:monospace;">{{ $license->identifier }}</dd>
         </div>
         <div>
+            <dt>Inspect URI</dt>
+            <dd style="font-family:monospace;">{{ $license->inspect_uri }}</dd>
+        </div>
+        <div>
             <dt>Per-seat rate</dt>
             <dd>${{ number_format($license->product->price ?? 0, 2) }}</dd>
         </div>

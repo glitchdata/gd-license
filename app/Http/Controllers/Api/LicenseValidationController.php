@@ -38,6 +38,7 @@ class LicenseValidationController extends Controller
                 'id' => $license->id,
                 'seats_total' => $license->seats_total,
                 'seats_used' => $license->seats_used,
+                'inspect_uri' => $license->inspect_uri,
             ],
             'product' => [
                 'id' => $license->product->id,

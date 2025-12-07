@@ -147,11 +147,13 @@
             <a href="{{ route('home') }}" class="brand">Glitchdata</a>
             <div class="nav-links">
                 <a href="{{ route('home') }}">Home</a>
-                <a href="{{ route('shop') }}">Shop</a>
-                <a href="{{ route('api.lab') }}">API Lab</a>
                 @auth
                     <a href="{{ route('dashboard') }}">Dashboard</a>
+                    <a href="{{ route('shop') }}">Shop</a>
+                    <a href="{{ route('api.lab') }}">API Lab</a>
                 @else
+                    <a href="{{ route('shop') }}">Shop</a>
+                    <a href="{{ route('api.lab') }}">API Lab</a>
                     <a href="{{ route('login') }}">Login</a>
                     <a href="{{ route('register') }}">Register</a>
                 @endauth
