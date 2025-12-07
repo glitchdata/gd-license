@@ -108,10 +108,6 @@
             <span>License code</span>
             <input type="text" id="license-code" value="{{ $license->identifier }}" readonly>
         </label>
-        <label>
-            <span>Seats requested (optional)</span>
-            <input type="number" id="seats-requested" name="seats_requested" min="1" placeholder="1">
-        </label>
         <button type="submit" {{ $license->product ? '' : 'disabled' }}>Validate license</button>
     </form>
 </section>
@@ -144,7 +140,7 @@
     const resultJson = document.getElementById('result-json');
     const errorMessage = document.getElementById('error-message');
     const licenseCodeInput = document.getElementById('license-code');
-    const seatsRequestedInput = document.getElementById('seats-requested');
+    // const seatsRequestedInput = document.getElementById('seats-requested');
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -158,10 +154,6 @@
         const payload = {
             license_code: licenseCodeInput.value,
         };
-        const seatsValue = seatsRequestedInput.value;
-        if (seatsValue) {
-            payload.seats_requested = Number(seatsValue);
-        }
 
         try {
             const response = await fetch('{{ url('/api/licenses/validate') }}', {
