@@ -29,7 +29,6 @@ class StripeClient
             return $this->client->paymentIntents->create([
                 'amount' => $amountCents,
                 'currency' => strtolower($currency),
-                'payment_method_types' => ['card'],
                 'metadata' => $metadata,
                 'automatic_payment_methods' => [
                     'enabled' => true,
