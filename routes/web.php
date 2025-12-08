@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailTestController;
 use App\Http\Controllers\PayPalOrderController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicLicenseValidatorController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\UserLicenseController;
@@ -44,6 +45,11 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware('auth')
     ->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+});
 
 Route::post('/dashboard/licenses', [UserLicenseController::class, 'store'])
     ->middleware('auth')
