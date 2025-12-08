@@ -22,17 +22,18 @@
 @endif
 
 @if ($user->is_admin)
-    <section class="card" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
-        <div>
-            <p class="eyebrow" style="margin-bottom:0.35rem;">Admin tools</p>
-            <h2 style="margin:0;">Control users & licenses</h2>
+    <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <div>
+                <p class="eyebrow" style="margin-bottom:0.35rem;">Admin tools</p>
+                <h2 style="margin:0;">Control users & licenses</h2>
+            </div>
         </div>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <a class="link" style="font-weight:600;" href="{{ route('admin.users.index') }}">Manage users →</a>
-            <a class="link" style="font-weight:600;" href="{{ route('admin.products.index') }}">Manage products →</a>
-            <a class="link" style="font-weight:600;" href="{{ route('admin.licenses.index') }}">Manage licenses →</a>
-            <a class="link" style="font-weight:600;" href="{{ route('admin.tools.license-validation') }}">Test API →</a>
-            <a class="link" style="font-weight:600;" href="{{ route('email.test') }}">Send test email →</a>
+        <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.5rem;">
+            <a class="link" href="{{ route('admin.users.index') }}" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);font-weight:600;">Manage users</a>
+            <a class="link" href="{{ route('admin.products.index') }}" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);font-weight:600;">Manage products</a>
+            <a class="link" href="{{ route('admin.licenses.index') }}" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);font-weight:600;">Manage licenses</a>
+            <a class="link" href="{{ route('email.test') }}" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);font-weight:600;">Send test email</a>
         </div>
     </section>
 @endif
