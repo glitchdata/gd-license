@@ -112,15 +112,9 @@
             </div>
             <input type="hidden" name="paypal_order_id" id="paypal-order-id">
             <p style="margin:0;color:var(--muted);font-size:0.95rem;">Checkout is powered by PayPal. Each purchase provides a single-seat license tied to your account.</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.75rem;align-items:start;">
-                <div style="padding:0.5rem;border:1px solid rgba(15,23,42,0.08);border-radius:0.85rem;background:#fff;box-shadow:0 8px 20px rgba(15,23,42,0.06);">
-                    <div id="paypal-buttons-dashboard"></div>
-                    <p style="margin:0.35rem 0 0;color:var(--muted);font-size:0.9rem;">Pay with PayPal</p>
-                </div>
-                <div style="padding:0.5rem;border:1px solid rgba(15,23,42,0.08);border-radius:0.85rem;background:#fff;box-shadow:0 8px 20px rgba(15,23,42,0.06);">
-                    <div id="paypal-card-dashboard"></div>
-                    <p style="margin:0.35rem 0 0;color:var(--muted);font-size:0.9rem;">Pay with credit/debit card</p>
-                </div>
+            <div style="padding:0.5rem;border:1px solid rgba(15,23,42,0.08);border-radius:0.85rem;background:#fff;box-shadow:0 8px 20px rgba(15,23,42,0.06);">
+                <div id="paypal-buttons-dashboard"></div>
+                <p style="margin:0.35rem 0 0;color:var(--muted);font-size:0.9rem;">Pay with PayPal</p>
             </div>
             <p id="paypal-errors-dashboard" style="display:none;color:var(--error);font-weight:600;"></p>
             @error('payment')
@@ -265,7 +259,6 @@
 
     const renderButtons = () => {
         const paypalContainer = document.getElementById('paypal-buttons-dashboard');
-        const cardContainer = document.getElementById('paypal-card-dashboard');
 
         if (!paypalEnabled || !window.paypal) {
             if (paypalEnabled) {
@@ -345,19 +338,6 @@
 
         if (paypalContainer) {
             window.paypal.Buttons(options).render('#paypal-buttons-dashboard');
-        }
-
-        if (cardContainer && window.paypal.FUNDING && window.paypal.FUNDING.CARD) {
-            window.paypal.Buttons({
-                ...options,
-                style: {
-                    layout: 'horizontal',
-                    label: 'pay',
-                    color: 'silver',
-                    shape: 'rect',
-                },
-                fundingSource: window.paypal.FUNDING.CARD,
-            }).render('#paypal-card-dashboard');
         }
     };
 
