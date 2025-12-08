@@ -99,6 +99,42 @@
                 transform: translateY(-1px);
                 box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
             }
+        .nav-toggle {
+            display: none;
+            margin-left: auto;
+            border-radius: 0.9rem;
+            padding: 0.55rem 0.9rem;
+            background: #0f172a;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+        }
+        @media (max-width: 720px) {
+            .site-nav {
+                flex-wrap: wrap;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .nav-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                font-weight: 700;
+            }
+            .site-nav .nav-links {
+                width: 100%;
+                display: none;
+                flex-direction: column;
+                margin-left: 0;
+            }
+            .site-nav .nav-links[data-open="true"] {
+                display: flex;
+            }
+            .site-nav .nav-links a {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
         form { display: flex; flex-direction: column; gap: 1rem; }
         label span { display: block; margin-bottom: 0.35rem; font-size: 0.9rem; }
         input {
@@ -160,7 +196,11 @@
     <div class="page">
         <nav class="site-nav">
             <a href="{{ route('home') }}" class="brand">Glitchdata</a>
-            <div class="nav-links">
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+                <span>Menu</span>
+                <span aria-hidden="true">☰</span>
+            </button>
+            <div class="nav-links" id="primary-nav" data-open="false">
                 <a href="{{ route('home') }}">Home</a>
                 @auth
                     <a href="{{ route('dashboard') }}">Dashboard</a>
@@ -197,6 +237,19 @@
 
         @yield('content')
     </div>
+    <script>
+    (function () {
+        const toggle = document.querySelector('.nav-toggle');
+        const links = document.getElementById('primary-nav');
+        if (!toggle || !links) return;
+
+        toggle.addEventListener('click', () => {
+            const open = links.dataset.open === 'true';
+            links.dataset.open = open ? 'false' : 'true';
+            toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+        });
+    })();
+    </script>
     @stack('scripts')
 </body>
 </html>
