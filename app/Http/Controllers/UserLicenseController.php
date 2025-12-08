@@ -30,9 +30,16 @@ class UserLicenseController extends Controller
     public function store(PurchaseLicenseRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $orderId = $this->sanitizeOrderId($data['paypal_order_id'] ?? '');
+        if ($orderId === null) {
+            return back()
+                ->withErrors(['payment' => 'Invalid PayPal order reference. Please restart checkout.'])
+                ->withInput($request->except('paypal_order_id'));
+        }
+
         $product = Product::findOrFail($data['product_id']);
         $seats = (int) $data['seats_total'];
-        $cacheKey = $this->orderCacheKey($data['paypal_order_id']);
+        $cacheKey = $this->orderCacheKey($orderId);
         $cachedOrder = Cache::get($cacheKey);
 
         if (! $cachedOrder || ($cachedOrder['user_id'] ?? null) !== $request->user()->id) {
@@ -50,7 +57,7 @@ class UserLicenseController extends Controller
         $total = (float) $cachedOrder['total'];
 
         try {
-            $capture = $this->paypal->captureOrder($data['paypal_order_id']);
+            $capture = $this->paypal->captureOrder($orderId);
         } catch (Exception $e) {
             return back()
                 ->withErrors(['payment' => $e->getMessage()])
@@ -114,5 +121,20 @@ class UserLicenseController extends Controller
             'currency' => $captureNode['amount']['currency_code'] ?? null,
             'transaction_id' => $captureNode['id'] ?? null,
         ];
+    }
+
+    private function sanitizeOrderId(string $orderId): ?string
+    {
+        $trimmed = trim(preg_replace('/\s+/', '', $orderId));
+        if ($trimmed === '') {
+            return null;
+        }
+
+        // PayPal order ids are typically uppercase alphanumerics (and may include hyphen).
+        if (! preg_match('/^[A-Z0-9-]+$/', $trimmed)) {
+            return null;
+        }
+
+        return $trimmed;
     }
 }
