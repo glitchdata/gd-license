@@ -149,6 +149,7 @@
                 <a href="{{ route('home') }}">Home</a>
                 @auth
                     <a href="{{ route('dashboard') }}">Dashboard</a>
+                    <a href="{{ route('profile.show') }}">Profile</a>
                     <a href="{{ route('shop') }}">Shop</a>
                     <a href="{{ route('api.lab') }}">API Lab</a>
                     @if (auth()->user()?->is_admin)
