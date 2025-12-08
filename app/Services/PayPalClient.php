@@ -6,6 +6,7 @@ use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class PayPalClient
@@ -39,6 +40,12 @@ class PayPalClient
         $response = $this->authorizedRequest()->post('/v2/checkout/orders', $payload);
 
         if (! $response->successful()) {
+            Log::warning('PayPal createOrder failed', [
+                'payload' => $payload,
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'json' => $response->json(),
+            ]);
             throw new RuntimeException($this->errorFromResponse($response));
         }
 
@@ -53,6 +60,12 @@ class PayPalClient
         $response = $this->authorizedRequest()->post("/v2/checkout/orders/{$orderId}/capture");
 
         if (! $response->successful()) {
+            Log::warning('PayPal captureOrder failed', [
+                'order_id' => $orderId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'json' => $response->json(),
+            ]);
             throw new RuntimeException($this->errorFromResponse($response));
         }
 
