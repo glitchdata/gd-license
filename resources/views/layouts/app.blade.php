@@ -164,6 +164,15 @@
             transform: translateY(-1px);
             box-shadow: 0 12px 24px rgba(37, 99, 235, 0.35);
         }
+        .link.button-reset {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .link.button-reset:hover { text-decoration: underline; }
         .banner {
             border-radius: 1rem;
             padding: 1rem 1.25rem;

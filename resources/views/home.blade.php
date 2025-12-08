@@ -9,9 +9,9 @@
         <h1>Identity, licensing, and validation in one simple portal.</h1>
         <p class="lead">Launch a secure dashboard for your team, grant software seats, and verify entitlements through a clean API toolkit.</p>
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
-            <a class="link" style="font-weight:600;" href="{{ route('shop') }}">Explore the shop →</a>
-            <a class="link" href="{{ route('api.lab') }}">Test the API →</a>
-            <a class="link" href="{{ route('register') }}">Create an account</a>
+            <button type="button" class="link button-reset" style="font-weight:600;" onclick="window.location='{{ route('shop') }}'">Explore the shop →</button>
+            <button type="button" class="link button-reset" onclick="window.location='{{ route('api.lab') }}'">Test the API →</button>
+            <button type="button" class="link button-reset" onclick="window.location='{{ route('register') }}'">Create an account</button>
         </div>
     </div>
 </header>
