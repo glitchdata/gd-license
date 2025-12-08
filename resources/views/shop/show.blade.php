@@ -75,158 +75,141 @@
             @error('payment')
                 <p style="color:var(--error);font-weight:600;">{{ $message }}</p>
             @enderror
-            const renderButtons = () => {
-                const paypalContainer = document.getElementById('paypal-buttons-shop');
-
-                if (!window.paypal) {
-                    if (paypalContainer) {
-                        showError('PayPal SDK is not available.');
-                    }
-                    return;
-                }
-
-                const options = {
-                    style: {
-                        layout: 'vertical',
-                        color: 'gold',
-                        shape: 'rect',
-                    },
-                    createOrder: async () => {
-                        clearError();
-                        if (!form) {
-                            throw new Error('Form not ready.');
-                        }
-                        const payload = {
-                            product_id: form.querySelector('input[name="product_id"]').value,
-                            seats_total: 1,
-                            domain: domainInput ? domainInput.value : null,
-                        };
-                        const response = await fetch('{{ route('paypal.orders.store') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            },
-                            body: JSON.stringify(payload),
-                        });
-                        const data = await response.json();
-                        if (!response.ok) {
-                            throw new Error(data.message || 'Unable to create a PayPal order.');
-                        }
-                        paypalOrderInput.value = data.order_id;
-                        return data.order_id;
-                    },
-                    onApprove: (data) => {
-                        clearError();
-                        if (paypalOrderInput) {
-                            paypalOrderInput.value = data.orderID;
-                        }
-                        if (form) {
-                            form.dataset.paypalReady = 'true';
-                            form.submit();
-                        }
-                    },
-                    onCancel: () => {
-                        showError('Checkout was cancelled.');
-                        if (paypalOrderInput) {
-                            paypalOrderInput.value = '';
-                        }
-                        if (form) {
-                            form.dataset.paypalReady = 'false';
-                        }
-                    },
-                    onError: (err) => {
-                        showError(err && err.message ? err.message : 'Payment reported an error.');
-                        if (paypalOrderInput) {
-                            paypalOrderInput.value = '';
-                        }
-                        if (form) {
-                            form.dataset.paypalReady = 'false';
-                        }
-                    }
-                };
-
-                if (paypalContainer) {
-                    window.paypal.Buttons(options).render('#paypal-buttons-shop');
-                }
-            };
-
-            renderButtons();
-        } else if (!window.paypal && document.getElementById('paypal-buttons-shop')) {
-            showError('PayPal SDK is not available.');
-        }
-                            seats_total: 1,
-                            domain: domainInput ? domainInput.value : null,
-                        };
-                        const response = await fetch('{{ route('paypal.orders.store') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            },
-                            body: JSON.stringify(payload),
-                        });
-                        const data = await response.json();
-                        if (!response.ok) {
-                            throw new Error(data.message || 'Unable to create a PayPal order.');
-                        }
-                        paypalOrderInput.value = data.order_id;
-                        return data.order_id;
-                    },
-                    onApprove: (data) => {
-                        clearError();
-                        if (paypalOrderInput) {
-                            paypalOrderInput.value = data.orderID;
-                        }
-                        if (form) {
-                            form.dataset.paypalReady = 'true';
-                            form.submit();
-                        }
-                    },
-                    onCancel: () => {
-                        showError('Checkout was cancelled.');
-                        if (paypalOrderInput) {
-                            paypalOrderInput.value = '';
-                        }
-                        if (form) {
-                            form.dataset.paypalReady = 'false';
-                        }
-                    },
-                    onError: (err) => {
-                        showError(err && err.message ? err.message : 'Payment reported an error.');
-                        if (paypalOrderInput) {
-                            paypalOrderInput.value = '';
-                        }
-                        if (form) {
-                            form.dataset.paypalReady = 'false';
-                        }
-                    }
-                };
-
-                if (paypalContainer) {
-                    window.paypal.Buttons(options).render('#paypal-buttons-shop');
-                }
-
-                if (cardContainer && window.paypal.FUNDING && window.paypal.FUNDING.CARD) {
-                    window.paypal.Buttons({
-                        ...options,
-                        style: {
-                            layout: 'vertical',
-                            color: 'silver',
-                            shape: 'rect',
-                        },
-                        fundingSource: window.paypal.FUNDING.CARD,
-                    }).render('#paypal-card-shop');
-                }
-            };
-
-            renderButtons();
-        } else if (!window.paypal && document.getElementById('paypal-buttons-shop')) {
-            showError('PayPal SDK is not available.');
-        }
-        })();
-        </script>
-    @endpush
+            @if (! $paypalClientId)
+                <p style="color:var(--error);font-weight:600;">Set PAYPAL_CLIENT_ID and PAYPAL_SECRET in your environment file to enable checkout.</p>
+            @endif
+        </form>
+    </section>
 @endauth
+
+@endsection
+
+@push('scripts')
+@if ($paypalClientId)
+    <script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency={{ $paypalCurrency ?? 'USD' }}" data-sdk-integration-source="button-factory"></script>
+@endif
+<script>
+(function () {
+    const form = document.getElementById('shop-purchase-form');
+    const total = document.getElementById('shop-purchase-total');
+    const domainInput = form ? form.querySelector('input[name="domain"]') : null;
+    const paypalOrderInput = document.getElementById('shop-paypal-order');
+    const paypalErrors = document.getElementById('paypal-errors-shop');
+    const paypalEnabled = {{ $paypalClientId ? 'true' : 'false' }};
+    const price = parseFloat('{{ number_format($product->price, 2, '.', '') }}');
+
+    const showError = (message) => {
+        if (paypalErrors) {
+            paypalErrors.textContent = message;
+            paypalErrors.style.display = 'block';
+        }
+    };
+
+    const clearError = () => {
+        if (paypalErrors) {
+            paypalErrors.textContent = '';
+            paypalErrors.style.display = 'none';
+        }
+    };
+
+    const clearOrder = () => {
+        if (paypalOrderInput) {
+            paypalOrderInput.value = '';
+        }
+        if (form) {
+            form.dataset.paypalReady = 'false';
+        }
+    };
+
+    const updateTotal = () => {
+        if (total && Number.isFinite(price)) {
+            total.textContent = `$${price.toFixed(2)}`;
+        }
+    };
+
+    if (form) {
+        form.addEventListener('submit', (event) => {
+            if (paypalEnabled && form.dataset.paypalReady !== 'true') {
+                event.preventDefault();
+                showError('Please approve the PayPal popup to complete checkout.');
+            }
+        });
+    }
+
+    updateTotal();
+
+    if (paypalEnabled) {
+        const renderButtons = () => {
+            const paypalContainer = document.getElementById('paypal-buttons-shop');
+
+            if (!window.paypal) {
+                if (paypalContainer) {
+                    showError('PayPal SDK is not available.');
+                }
+                return;
+            }
+
+            const options = {
+                style: {
+                    layout: 'vertical',
+                    color: 'gold',
+                    shape: 'rect',
+                },
+                createOrder: async () => {
+                    clearError();
+                    if (!form) {
+                        throw new Error('Form not ready.');
+                    }
+                    const payload = {
+                        product_id: form.querySelector('input[name="product_id"]').value,
+                        seats_total: 1,
+                        domain: domainInput ? domainInput.value : null,
+                    };
+                    const response = await fetch('{{ route('paypal.orders.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Unable to create a PayPal order.');
+                    }
+                    paypalOrderInput.value = data.order_id;
+                    return data.order_id;
+                },
+                onApprove: (data) => {
+                    clearError();
+                    if (paypalOrderInput) {
+                        paypalOrderInput.value = data.orderID;
+                    }
+                    if (form) {
+                        form.dataset.paypalReady = 'true';
+                        form.submit();
+                    }
+                },
+                onCancel: () => {
+                    showError('Checkout was cancelled.');
+                    clearOrder();
+                },
+                onError: (err) => {
+                    showError(err && err.message ? err.message : 'Payment reported an error.');
+                    clearOrder();
+                }
+            };
+
+            if (paypalContainer) {
+                window.paypal.Buttons(options).render('#paypal-buttons-shop');
+            }
+        };
+
+        renderButtons();
+    } else if (!window.paypal && document.getElementById('paypal-buttons-shop')) {
+        showError('PayPal SDK is not available.');
+    }
+})();
+</script>
+@endpush
