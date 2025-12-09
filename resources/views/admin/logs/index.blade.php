@@ -9,7 +9,13 @@
         <h1>Application logs</h1>
         <p class="lead">Showing the latest {{ $maxLines }} lines from {{ $path }}.</p>
     </div>
-    <a class="link" href="{{ route('admin.home') }}">Back to admin</a>
+    <div class="admin-nav" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+        <a class="{{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}" href="{{ route('admin.licenses.index') }}">Licenses</a>
+        <a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}">Products</a>
+        <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">Users</a>
+        <a class="{{ request()->routeIs('admin.event-logs.index') ? 'active' : '' }}" href="{{ route('admin.event-logs.index') }}">Event Logs</a>
+        <a class="active" href="{{ route('admin.logs.index') }}">Logs</a>
+    </div>
 </header>
 
 @if ($missing)

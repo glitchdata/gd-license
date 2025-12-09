@@ -9,11 +9,12 @@
         <h1>License management</h1>
         <p class="lead">Review, edit, and retire license allocations across the organization.</p>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.5rem;">
-        <a class="link" href="{{ route('dashboard') }}" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);">Dashboard</a>
-        <a class="link" href="{{ route('admin.users.index') }}" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);">Users</a>
-        <a class="link" href="{{ route('admin.products.index') }}" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);">Products</a>
-        <a href="{{ route('admin.licenses.create') }}" class="link" style="display:block;text-align:center;padding:0.65rem 0.9rem;border:1px solid rgba(15,23,42,0.12);border-radius:0.9rem;background:#fff;box-shadow:0 6px 18px rgba(15,23,42,0.08);font-weight:600;">+ New license</a>
+    <div class="admin-nav">
+        <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
+        <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">Users</a>
+        <a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}">Products</a>
+        <a class="active" href="{{ route('admin.licenses.index') }}">Licenses</a>
+        <a href="{{ route('admin.licenses.create') }}" class="{{ request()->routeIs('admin.licenses.create') ? 'active' : '' }}">+ New license</a>
     </div>
 </header>
 

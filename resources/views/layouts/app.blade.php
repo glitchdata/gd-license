@@ -205,6 +205,31 @@
             color: rgba(15, 23, 42, 0.65);
         }
         .details dd { margin: 0.25rem 0 0; font-size: 1.1rem; }
+        .admin-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.5rem;
+        }
+        .admin-nav a {
+            display: block;
+            text-align: center;
+            padding: 0.65rem 0.9rem;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-radius: 0.9rem;
+            background: #fff;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text);
+            transition: transform 120ms ease, box-shadow 120ms ease;
+        }
+        .admin-nav a:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12); }
+        .admin-nav a.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary-dark);
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+        }
     </style>
 </head>
 <body>
