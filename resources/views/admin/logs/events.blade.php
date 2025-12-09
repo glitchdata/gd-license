@@ -1,15 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Admin · Event Logs')
+@section('title', 'Admin · Logs')
 
 @section('content')
 <header class="hero">
     <div>
         <p class="eyebrow">Admin</p>
-        <h1>Event logs</h1>
+        <h1>Logs</h1>
         <p class="lead">Recent login, purchase, and change events.</p>
     </div>
-    <a class="link" href="{{ route('admin.home') }}">Back to admin</a>
+    <div class="admin-nav">
+        <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
+        <a class="{{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}" href="{{ route('admin.licenses.index') }}">Licenses</a>
+        <a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}">Products</a>
+        <a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">Users</a>
+        <a class="active" href="{{ route('admin.event-logs.index') }}">Logs</a>
+        <a class="{{ request()->routeIs('admin.tools.license-validation') ? 'active' : '' }}" href="{{ route('admin.tools.license-validation') }}">License Validation</a>
+    </div>
 </header>
 
 @if ($logs->isEmpty())
