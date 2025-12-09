@@ -105,6 +105,36 @@
                 transform: translateY(-1px);
                 box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
             }
+            .sub-nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: 0.6rem;
+            }
+            .sub-nav button {
+                border: 1px solid rgba(15, 23, 42, 0.12);
+                background: #fff;
+                color: var(--text);
+                border-radius: 0.85rem;
+                padding: 0.55rem 0.9rem;
+                box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+                cursor: pointer;
+                font-weight: 600;
+                transition: transform 120ms ease, box-shadow 120ms ease;
+            }
+            .sub-nav button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+            }
+            .sub-nav button.active {
+                background: var(--primary);
+                color: #fff;
+                border-color: var(--primary-dark);
+                box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+            }
+            @media (max-width: 720px) {
+                .sub-nav { flex-direction: column; }
+            }
         .nav-toggle {
             display: none;
             margin-left: auto;
@@ -233,6 +263,31 @@
                 @endauth
             </div>
         </nav>
+
+        @auth
+            @if (auth()->user()?->is_admin)
+                <div class="sub-nav" aria-label="Admin navigation">
+                    <button type="button"
+                        class="{{ request()->routeIs('admin.licenses.*') ? 'active' : '' }}"
+                        onclick="window.location='{{ route('admin.licenses.index') }}'">Licenses</button>
+                    <button type="button"
+                        class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}"
+                        onclick="window.location='{{ route('admin.products.index') }}'">Products</button>
+                    <button type="button"
+                        class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                        onclick="window.location='{{ route('admin.users.index') }}'">Users</button>
+                    <button type="button"
+                        class="{{ request()->routeIs('admin.logs.index') ? 'active' : '' }}"
+                        onclick="window.location='{{ route('admin.logs.index') }}'">Logs</button>
+                    <button type="button"
+                        class="{{ request()->routeIs('admin.event-logs.index') ? 'active' : '' }}"
+                        onclick="window.location='{{ route('admin.event-logs.index') }}'">Event Logs</button>
+                    <button type="button"
+                        class="{{ request()->routeIs('admin.tools.license-validation') ? 'active' : '' }}"
+                        onclick="window.location='{{ route('admin.tools.license-validation') }}'">License Validation</button>
+                </div>
+            @endif
+        @endauth
 
         @if (session('status'))
             <div class="banner success">
