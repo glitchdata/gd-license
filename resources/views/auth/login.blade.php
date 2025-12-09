@@ -15,7 +15,8 @@
     <section class="card">
         <h2>Sign in</h2>
         @if (session('status'))
-            <div class="banner success">{{ session('status') }}</div>
+            @php $status = session('status'); @endphp
+            <div class="banner {{ $status === 'You have been logged out.' ? 'info' : 'success' }}">{{ $status }}</div>
         @endif
         @if ($errors->any())
             <div class="banner error">

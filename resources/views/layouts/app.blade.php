@@ -191,6 +191,10 @@
             background: rgba(220, 38, 38, 0.12);
             color: var(--error);
         }
+        .banner.info {
+            background: rgba(37, 99, 235, 0.12);
+            color: var(--primary);
+        }
         .banner ul { margin: 0; padding-left: 1rem; }
         .status { margin: 0; }
         .link { color: var(--primary); font-weight: 600; text-decoration: none; }
