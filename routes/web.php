@@ -36,8 +36,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/login/two-factor', [LoginController::class, 'verifyTwoFactor'])->name('login.two-factor.verify');
     Route::post('/login/two-factor/resend', [LoginController::class, 'resendTwoFactor'])->name('login.two-factor.resend');
 
-    Route::get('/auth/google/redirect', [SocialLoginController::class, 'redirect'])->name('oauth.google.redirect');
-    Route::get('/auth/google/callback', [SocialLoginController::class, 'callback'])->name('oauth.google.callback');
+    Route::get('/auth/{provider}/redirect', [SocialLoginController::class, 'redirect'])
+        ->whereIn('provider', ['google', 'meta'])
+        ->name('oauth.redirect');
+    Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback'])
+        ->whereIn('provider', ['google', 'meta'])
+        ->name('oauth.callback');
 
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
