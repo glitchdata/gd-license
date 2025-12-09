@@ -259,7 +259,7 @@
         @if (session('status'))
             <div class="banner success">
                 <p class="status">{{ session('status') }}</p>
-            </div>
+                        <a href="{{ route('admin.event-logs.index') }}" class="{{ request()->routeIs('admin.event-logs.index') ? 'nav-active' : '' }}">Logs</a>
         @endif
 
         @if ($errors->any())
