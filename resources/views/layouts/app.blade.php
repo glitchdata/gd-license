@@ -95,6 +95,12 @@
                 box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
                 transition: transform 120ms ease, box-shadow 120ms ease;
             }
+            .site-nav .nav-links a.nav-active {
+                background: var(--primary);
+                color: #fff;
+                border-color: var(--primary-dark);
+                box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+            }
             .site-nav .nav-links a:hover {
                 transform: translateY(-1px);
                 box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
@@ -210,20 +216,20 @@
                 <span aria-hidden="true">☰</span>
             </button>
             <div class="nav-links" id="primary-nav" data-open="false">
-                <a href="{{ route('home') }}">Home</a>
+                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'nav-active' : '' }}">Home</a>
                 @auth
-                    <a href="{{ route('dashboard') }}">Dashboard</a>
-                    <a href="{{ route('profile.show') }}">Profile</a>
-                    <a href="{{ route('shop') }}">Shop</a>
-                    <a href="{{ route('api.lab') }}">API Lab</a>
+                    <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'nav-active' : '' }}">Dashboard</a>
+                    <a href="{{ route('profile.show') }}" class="{{ request()->routeIs('profile.show') ? 'nav-active' : '' }}">Profile</a>
+                    <a href="{{ route('shop') }}" class="{{ request()->routeIs('shop') || request()->routeIs('shop.products.show') ? 'nav-active' : '' }}">Shop</a>
+                    <a href="{{ route('api.lab') }}" class="{{ request()->routeIs('api.lab') ? 'nav-active' : '' }}">API Lab</a>
                     @if (auth()->user()?->is_admin)
-                        <a href="{{ route('admin.event-logs.index') }}">Event Logs</a>
+                        <a href="{{ route('admin.event-logs.index') }}" class="{{ request()->routeIs('admin.event-logs.index') ? 'nav-active' : '' }}">Event Logs</a>
                     @endif
                 @else
-                    <a href="{{ route('shop') }}">Shop</a>
-                    <a href="{{ route('api.lab') }}">API Lab</a>
-                    <a href="{{ route('login') }}">Login</a>
-                    <a href="{{ route('register') }}">Register</a>
+                    <a href="{{ route('shop') }}" class="{{ request()->routeIs('shop') || request()->routeIs('shop.products.show') ? 'nav-active' : '' }}">Shop</a>
+                    <a href="{{ route('api.lab') }}" class="{{ request()->routeIs('api.lab') ? 'nav-active' : '' }}">API Lab</a>
+                    <a href="{{ route('login') }}" class="{{ request()->routeIs('login') ? 'nav-active' : '' }}">Login</a>
+                    <a href="{{ route('register') }}" class="{{ request()->routeIs('register') ? 'nav-active' : '' }}">Register</a>
                 @endauth
             </div>
         </nav>
